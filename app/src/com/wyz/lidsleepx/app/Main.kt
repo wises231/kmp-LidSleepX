@@ -28,6 +28,7 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.wyz.lidsleepx.app.helper.HelperEntrypoint
+import com.wyz.lidsleepx.app.platform.SingleInstanceLock
 import com.wyz.lidsleepx.app.ui.AppLanguage
 import com.wyz.lidsleepx.app.ui.AppRuntime
 import com.wyz.lidsleepx.app.ui.SettingsWindow
@@ -39,6 +40,12 @@ import kotlin.system.exitProcess
 fun main(args: Array<String>) {
     if (args.contains("--helper")) {
         exitProcess(HelperEntrypoint.run())
+    }
+    val instanceLock = SingleInstanceLock()
+    if (!instanceLock.acquire()) {
+        // Another instance already runs. Stop this instance.
+        // A clean exit keeps LaunchAgent KeepAlive.SuccessfulExit=false quiet.
+        exitProcess(0)
     }
     val runtime = AppRuntime()
     try {
@@ -56,6 +63,7 @@ fun main(args: Array<String>) {
         }
     } finally {
         runtime.close()
+        instanceLock.close()
     }
 }
 

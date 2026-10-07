@@ -3,7 +3,7 @@ package com.wyz.lidsleepx.core
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-const val APP_VERSION = "0.2.0"
+const val APP_VERSION = "0.2.1"
 const val APP_ID = "com.wyz.lidsleepx"
 const val APP_NAME = "LidSleepX"
 val SUPPORTED_HIBERNATE_MODES = setOf(0, 3, 25)

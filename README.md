@@ -14,12 +14,12 @@ The current build is not a public release.
 
 Download the latest internal build:
 
-- [LidSleepX-0.2.0.dmg](https://github.com/wises231/kmp-LidSleepX/releases/download/v0.2.0/LidSleepX-0.2.0.dmg)
-- [Release page](https://github.com/wises231/kmp-LidSleepX/releases/tag/v0.2.0)
+- [LidSleepX-0.2.1.dmg](https://github.com/wises231/kmp-LidSleepX/releases/download/v0.2.1/LidSleepX-0.2.1.dmg)
+- [Release page](https://github.com/wises231/kmp-LidSleepX/releases/tag/v0.2.1)
 
 Install steps:
 
-1. Open `LidSleepX-0.2.0.dmg`.
+1. Open `LidSleepX-0.2.1.dmg`.
 2. Drag `LidSleepX.app` to `Applications`.
 3. Open `LidSleepX.app`.
 
@@ -34,7 +34,7 @@ xattr -dr com.apple.quarantine /Applications/LidSleepX.app
 The download has this SHA-256 checksum:
 
 ```text
-5f8ea5799c7884d68234e50325bf7fdee8d87668188da625c4ee29ff816fb317  LidSleepX-0.2.0.dmg
+8c9a3d7f62436c93487fbb04ab629d8809cde2eafbeb35e81e819d42df6eb3d2  LidSleepX-0.2.1.dmg
 ```
 
 ## Internal test notes
@@ -62,6 +62,12 @@ Internal acceptance checklist:
 7. Force-quit the app and confirm the LaunchAgent restarts it.
 8. Run a manual update check.
 9. Remove the helper and confirm `SleepDisabled` is `0`.
+
+## 0.2.1 changes
+
+- The Login Item disable path deletes the plist before it disables the launchd job.
+- A single-instance lock prevents more than one app process.
+- The app refreshes the helper status after installation.
 
 ## Features
 
@@ -104,7 +110,7 @@ bash scripts/package-macos.sh
 The script writes these files:
 
 - `dist/LidSleepX.app`
-- `dist/LidSleepX-0.2.0.dmg`
+- `dist/LidSleepX-0.2.1.dmg`
 
 The script builds the app image with `jpackage`, sets the bundle keys, and signs the app with an ad-hoc signature.
 

@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-VERSION="0.2.0"
+VERSION="0.2.1"
 # jpackage rejects versions whose first component is zero.
 JPACKAGE_VERSION="1.0.0"
 APP_ID="com.wyz.lidsleepx"

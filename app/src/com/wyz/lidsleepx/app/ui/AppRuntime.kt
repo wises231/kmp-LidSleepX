@@ -102,9 +102,12 @@ class AppRuntime {
         state = engine.currentState.copy(helperStatus = helperStatus)
         loginItemSync()
         scope.launch {
+            var ticks = 0L
             while (isActive) {
                 delay(1_000L)
                 runCatching { engine.tick() }
+                ticks += 1
+                if (ticks % 5L == 0L) refreshHelperStatus()
             }
         }
         scope.launch {
@@ -232,11 +235,11 @@ class AppRuntime {
         busy = true
         scope.launch {
             val installed = privileged.install()
-            helperStatus = privileged.status()
-            state = engine.currentState.copy(helperStatus = helperStatus)
+            refreshHelperStatus(waitForInstalled = installed)
             busy = false
-            statusMessage = if (installed) strings.helperInstalled else strings.helperInstallError
-            if (installed) dismissWelcome()
+            val success = helperStatus == HelperStatus.INSTALLED
+            statusMessage = if (success) strings.helperInstalled else strings.helperInstallError
+            if (success) dismissWelcome()
         }
     }
 
@@ -312,6 +315,14 @@ class AppRuntime {
         state = engine.currentState
     }
 
+    private suspend fun refreshHelperStatus(waitForInstalled: Boolean = false) {
+        val current = privileged.status()
+        val status = if (waitForInstalled) awaitHelperStatus(current) { privileged.status() } else current
+        if (helperStatus == status) return
+        helperStatus = status
+        state = engine.currentState.copy(helperStatus = status)
+    }
+
     private fun loginItemSync() {
         val actual = loginItem.isEnabled()
         if (actual != config.launchAtLogin) {
@@ -339,4 +350,20 @@ class AppRuntime {
             return "${battery.percent}% · $stateText"
         }
     }
+}
+
+internal suspend fun awaitHelperStatus(
+    initialStatus: HelperStatus,
+    timeoutMillis: Long = 5_000L,
+    pollIntervalMillis: Long = 200L,
+    statusProvider: () -> HelperStatus,
+): HelperStatus {
+    if (initialStatus == HelperStatus.INSTALLED) return initialStatus
+    val deadline = System.nanoTime() + timeoutMillis.coerceAtLeast(0L) * 1_000_000L
+    var status = initialStatus
+    while (status != HelperStatus.INSTALLED && System.nanoTime() < deadline) {
+        delay(pollIntervalMillis.coerceAtLeast(1L))
+        status = statusProvider()
+    }
+    return status
 }

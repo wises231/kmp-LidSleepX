@@ -1,6 +1,6 @@
-# LidSleepX 0.2.0 (internal test)
+# LidSleepX 0.2.1 (internal test)
 
-This is the second internal test build.
+This is the third internal test build.
 It is not a public release.
 
 ## Requirements
@@ -26,6 +26,9 @@ It is not a public release.
 - Notifications and a rotating log.
 - Stable update checks from the GitHub Releases page.
 - English and Simplified Chinese text.
+- A single-instance lock prevents more than one app process.
+- The Login Item disable path releases the launchd job correctly.
+- The app refreshes the helper status after installation.
 
 ## Privileged helper
 
@@ -39,7 +42,7 @@ The helper accepts only `version`, `setDisableSleep`, and `setHibernateMode`.
 
 ## Install
 
-1. Open `LidSleepX-0.2.0.dmg`.
+1. Open `LidSleepX-0.2.1.dmg`.
 2. Drag `LidSleepX.app` to `Applications`.
 3. Open `LidSleepX.app`.
 
@@ -54,8 +57,8 @@ xattr -dr com.apple.quarantine /Applications/LidSleepX.app
 ## Checksum
 
 ```text
-SHA-256: 5f8ea5799c7884d68234e50325bf7fdee8d87668188da625c4ee29ff816fb317
-LidSleepX-0.2.0.dmg
+SHA-256: 8c9a3d7f62436c93487fbb04ab629d8809cde2eafbeb35e81e819d42df6eb3d2
+LidSleepX-0.2.1.dmg
 ```
 
 ## Internal test notes

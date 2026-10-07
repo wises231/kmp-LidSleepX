@@ -9,20 +9,23 @@ import java.util.concurrent.TimeUnit
 
 class MacLoginItem(
     private val plistPath: Path = Path.of(System.getProperty("user.home"), "Library", "LaunchAgents", "$APP_ID.plist"),
+    private val launchctl: (List<String>) -> Boolean = ::runLaunchctl,
 ) : LoginItem {
     override fun isEnabled(): Boolean = Files.exists(plistPath)
 
     override fun enable(): Boolean = runCatching {
         Files.createDirectories(plistPath.parent)
         Files.writeString(plistPath, plistText(), StandardCharsets.UTF_8)
-        runCatching { launchctl("bootout", "gui/${currentUid()}", plistPath.toString()) }
-        launchctl("bootstrap", "gui/${currentUid()}", plistPath.toString())
+        val domain = "gui/${currentUid()}"
+        val target = "$domain/$APP_ID"
+        if (!launchctl(listOf("enable", target))) return false
+        if (launchctl(listOf("print", target))) return true
+        launchctl(listOf("bootstrap", domain, plistPath.toString()))
     }.getOrDefault(false)
 
     override fun disable(): Boolean = runCatching {
-        runCatching { launchctl("bootout", "gui/${currentUid()}", plistPath.toString()) }
         Files.deleteIfExists(plistPath)
-        true
+        launchctl(listOf("disable", "gui/${currentUid()}/$APP_ID"))
     }.getOrDefault(false)
 
     fun developmentCommand(): String {
@@ -39,18 +42,6 @@ class MacLoginItem(
         val command = info.command().orElse("java")
         val arguments = info.arguments().orElse(emptyArray()).toList()
         return command to arguments
-    }
-
-    private fun launchctl(vararg args: String): Boolean {
-        val process = ProcessBuilder(listOf("/bin/launchctl") + args)
-            .redirectErrorStream(true)
-            .start()
-        if (!process.waitFor(5, TimeUnit.SECONDS)) {
-            process.destroyForcibly()
-            return false
-        }
-        process.inputStream.bufferedReader().readText()
-        return process.exitValue() == 0
     }
 
     private fun plistText(): String {
@@ -100,4 +91,16 @@ class MacLoginItem(
             .replace("\"", "&quot;")
             .replace("'", "&apos;")
     }
+}
+
+private fun runLaunchctl(args: List<String>): Boolean {
+    val process = ProcessBuilder(listOf("/bin/launchctl") + args)
+        .redirectErrorStream(true)
+        .start()
+    if (!process.waitFor(5, TimeUnit.SECONDS)) {
+        process.destroyForcibly()
+        return false
+    }
+    process.inputStream.bufferedReader().readText()
+    return process.exitValue() == 0
 }
