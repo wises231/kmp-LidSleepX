@@ -19,6 +19,7 @@ import com.wyz.lidsleepx.core.AppState
 import com.wyz.lidsleepx.core.ConfigStore
 import com.wyz.lidsleepx.core.Engine
 import com.wyz.lidsleepx.core.HelperStatus
+import com.wyz.lidsleepx.core.SUPPORTED_HIBERNATE_MODES
 import com.wyz.lidsleepx.core.UpdatePolicy
 import java.awt.FileDialog
 import java.awt.Frame
@@ -26,6 +27,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import javax.swing.JOptionPane
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -95,6 +97,7 @@ class AppRuntime {
     init {
         logger.info("LidSleepX $APP_VERSION starting")
         helperStatus = privileged.status()
+        syncHibernateMode()
         engine.start()
         state = engine.currentState.copy(helperStatus = helperStatus)
         loginItemSync()
@@ -160,10 +163,53 @@ class AppRuntime {
     fun setNotifications(enabled: Boolean) = updateConfig(config.copy(notificationsEnabled = enabled))
     fun setUpdateChecks(enabled: Boolean) = updateConfig(config.copy(updateCheckEnabled = enabled))
 
+    fun setSleepMode(mode: Int) {
+        if (mode !in SUPPORTED_HIBERNATE_MODES || busy) return
+        busy = true
+        scope.launch {
+            val success = privileged.setHibernateMode(mode)
+            if (success) {
+                val actual = privileged.hibernateMode() ?: mode
+                updateConfig(config.copy(hibernateMode = actual))
+                statusMessage = null
+            } else {
+                statusMessage = strings.sleepModeError
+            }
+            busy = false
+        }
+    }
+
+    fun clearConfig() {
+        if (busy) return
+        val choice = JOptionPane.showConfirmDialog(
+            null,
+            strings.clearConfigConfirm,
+            strings.clearConfig,
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE,
+        )
+        if (choice != JOptionPane.YES_OPTION) return
+        if (!configStore.clear()) {
+            statusMessage = strings.updateError
+            return
+        }
+        val defaultLanguage = AppLanguage.fromCode(null)
+        val defaults = AppConfig(
+            language = defaultLanguage.code,
+            launchAtLogin = loginItem.isEnabled(),
+            hibernateMode = privileged.hibernateMode(),
+        ).normalized()
+        config = defaults
+        engine.updateConfig(defaults)
+        state = engine.currentState.copy(helperStatus = helperStatus)
+        welcomeVisible = defaults.firstRun
+        statusMessage = stringsFor(defaultLanguage).clearConfigDone
+    }
+
     fun setLaunchAtLogin(enabled: Boolean) {
         val success = if (enabled) loginItem.enable() else loginItem.disable()
         if (success) updateConfig(config.copy(launchAtLogin = enabled))
-        else statusMessage = strings.updateError
+        else statusMessage = strings.launchAtLoginError
     }
 
     fun toggleIdleSleep() {
@@ -272,6 +318,13 @@ class AppRuntime {
             config = config.copy(launchAtLogin = actual)
             configStore.save(config)
         }
+    }
+
+    private fun syncHibernateMode() {
+        val actual = privileged.hibernateMode() ?: return
+        if (actual == config.hibernateMode) return
+        config = config.copy(hibernateMode = actual)
+        configStore.save(config)
     }
 
     companion object {

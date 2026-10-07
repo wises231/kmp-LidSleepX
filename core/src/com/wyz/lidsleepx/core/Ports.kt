@@ -39,6 +39,8 @@ interface PrivilegedOps {
     fun install(): Boolean
     fun uninstall(): Boolean
     fun setDisableSleep(disabled: Boolean): Boolean
+    fun hibernateMode(): Int?
+    fun setHibernateMode(mode: Int): Boolean
 }
 
 interface LoginItem {

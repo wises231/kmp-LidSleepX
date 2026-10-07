@@ -25,6 +25,7 @@ class VersionAndConfigTest {
         assertTrue(defaults.enabled)
         assertEquals(6, defaults.lowBatteryCapacity)
         assertEquals(10, defaults.lowTimeRemainingMinutes)
+        assertEquals(null, defaults.hibernateMode)
         assertTrue(Files.exists(path))
     }
 
@@ -45,6 +46,24 @@ class VersionAndConfigTest {
         val text = Files.readString(path)
         assertTrue(text.contains("\"unknown\""))
         assertTrue(text.contains("\"keep\""))
+    }
+
+    @Test
+    fun `config keeps supported hibernate modes and rejects other values`() {
+        assertEquals(25, AppConfig(hibernateMode = 25).normalized().hibernateMode)
+        assertEquals(null, AppConfig(hibernateMode = 7).normalized().hibernateMode)
+    }
+
+    @Test
+    fun `clear removes the configuration file`() {
+        val directory = Files.createTempDirectory("lidsleepx-config")
+        val path = directory.resolve("config.json")
+        val store = ConfigStore(path)
+        store.save(AppConfig())
+        assertTrue(Files.exists(path))
+        assertTrue(store.clear())
+        assertFalse(Files.exists(path))
+        assertTrue(store.load().enabled)
     }
 
     @Test

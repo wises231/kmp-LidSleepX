@@ -127,6 +127,10 @@ internal class HelperServer(private val logger: HelperLog) {
             val reply = when (request.command) {
                 "version" -> HelperProtocol.versionReply(request.requestId)
                 "setDisableSleep" -> setDisableSleep(request.requestId, request.payload["disabled"] == "true")
+                "setHibernateMode" -> setHibernateMode(
+                    request.requestId,
+                    request.payload["mode"]?.toIntOrNull() ?: return,
+                )
                 else -> HelperProtocol.failure(request.requestId, "Command is not allowed")
             }
             writeReply(client, reply)
@@ -143,6 +147,16 @@ internal class HelperServer(private val logger: HelperLog) {
 
     private fun setDisableSleep(requestId: String, disabled: Boolean) = runCatching {
         val process = ProcessBuilder("/usr/bin/pmset", "-a", "disablesleep", if (disabled) "1" else "0")
+            .redirectErrorStream(true)
+            .start()
+        val output = process.inputStream.bufferedReader().readText().trim()
+        val exit = process.waitFor()
+        if (exit == 0) HelperProtocol.success(requestId)
+        else HelperProtocol.failure(requestId, output.ifBlank { "pmset exited with $exit" })
+    }.getOrElse { HelperProtocol.failure(requestId, it.message ?: "pmset failed") }
+
+    private fun setHibernateMode(requestId: String, mode: Int) = runCatching {
+        val process = ProcessBuilder("/usr/bin/pmset", "-a", "hibernatemode", mode.toString())
             .redirectErrorStream(true)
             .start()
         val output = process.inputStream.bufferedReader().readText().trim()

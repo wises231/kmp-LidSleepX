@@ -6,8 +6,10 @@ import com.wyz.lidsleepx.app.helper.HelperProtocol
 import com.wyz.lidsleepx.core.AppLogger
 import com.wyz.lidsleepx.core.HelperStatus
 import com.wyz.lidsleepx.core.PrivilegedOps
+import com.wyz.lidsleepx.core.SUPPORTED_HIBERNATE_MODES
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 
 class MacPrivilegedOps(
     private val logger: AppLogger,
@@ -32,6 +34,31 @@ class MacPrivilegedOps(
     override fun setDisableSleep(disabled: Boolean): Boolean {
         if (!client.setDisableSleep(disabled)) {
             logger.warn("Privileged helper did not accept setDisableSleep($disabled)")
+            return false
+        }
+        return true
+    }
+
+    override fun hibernateMode(): Int? = runCatching {
+        val process = ProcessBuilder("/usr/bin/pmset", "-g")
+            .redirectErrorStream(true)
+            .start()
+        if (!process.waitFor(5, TimeUnit.SECONDS)) {
+            process.destroyForcibly()
+            return@runCatching null
+        }
+        Regex("""(?m)^\s*hibernatemode\s+(\d+)\s*$""")
+            .find(process.inputStream.bufferedReader().readText())
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.toIntOrNull()
+            ?.takeIf { it in SUPPORTED_HIBERNATE_MODES }
+    }.getOrNull()
+
+    override fun setHibernateMode(mode: Int): Boolean {
+        if (mode !in SUPPORTED_HIBERNATE_MODES) return false
+        if (!client.setHibernateMode(mode)) {
+            logger.warn("Privileged helper did not accept setHibernateMode($mode)")
             return false
         }
         return true

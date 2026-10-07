@@ -10,12 +10,13 @@ import kotlin.test.assertNull
 
 class GithubUpdateCheckerTest {
     private val release = """
-        {
-          "tag_name": "v0.2.0",
-          "name": "LidSleepX 0.2.0",
-          "html_url": "https://github.com/wises231/kmp-LidSleepX/releases/tag/v0.2.0",
-          "published_at": "2026-01-01T00:00:00Z"
-        }
+        <html>
+        <body>
+        <a href="/wises231/kmp-LidSleepX/releases/tag/v0.2.0">LidSleepX 0.2.0</a>
+        <a href="/wises231/kmp-LidSleepX/releases/tag/v0.1.0">LidSleepX 0.1.0</a>
+        <a href="/wises231/kmp-LidSleepX/releases/tag/v0.3.0-beta.1">Beta</a>
+        </body>
+        </html>
     """.trimIndent()
 
     @Test
@@ -25,7 +26,18 @@ class GithubUpdateCheckerTest {
         assertEquals("0.2.0", info?.version)
         assertEquals("LidSleepX 0.2.0", info?.title)
         assertEquals("https://github.com/wises231/kmp-LidSleepX/releases/tag/v0.2.0", info?.releaseUrl)
-        assertEquals("2026-01-01T00:00:00Z", info?.publishedAt)
+    }
+
+    @Test
+    fun `latest release ignores prerelease tags and chooses the highest stable version`() {
+        val body = """
+            <a href="https://github.com/wises231/kmp-LidSleepX/releases/tag/v0.1.9">old</a>
+            <a href="/wises231/kmp-LidSleepX/releases/tag/v0.4.0-rc.1">candidate</a>
+            <a href="/wises231/kmp-LidSleepX/releases/tag/v0.3.0">new</a>
+        """.trimIndent()
+        val info = GithubUpdateChecker().parseRelease(body)
+        assertEquals("0.3.0", info?.version)
+        assertEquals("https://github.com/wises231/kmp-LidSleepX/releases/tag/v0.3.0", info?.releaseUrl)
     }
 
     @Test
@@ -43,13 +55,13 @@ class GithubUpdateCheckerTest {
     @Test
     fun `malformed body returns null`() {
         val checker = GithubUpdateChecker()
-        assertNull(checker.parseRelease("not json"))
-        assertNull(checker.parseRelease("{\"name\":\"missing tag\"}"))
+        assertNull(checker.parseRelease("not a release page"))
+        assertNull(checker.parseRelease("<a href=\"/releases/tag/not-a-version\">bad</a>"))
     }
 }
 
 private class FakeConnection(private val status: Int, private val body: String) :
-    HttpURLConnection(URI("https://api.github.com/repos/wises231/kmp-LidSleepX/releases/latest").toURL()) {
+    HttpURLConnection(URI("https://github.com/wises231/kmp-LidSleepX/releases").toURL()) {
     override fun connect() {}
     override fun disconnect() {}
     override fun usingProxy(): Boolean = false

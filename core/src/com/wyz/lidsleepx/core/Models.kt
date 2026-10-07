@@ -3,9 +3,10 @@ package com.wyz.lidsleepx.core
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-const val APP_VERSION = "0.1.0"
+const val APP_VERSION = "0.2.0"
 const val APP_ID = "com.wyz.lidsleepx"
 const val APP_NAME = "LidSleepX"
+val SUPPORTED_HIBERNATE_MODES = setOf(0, 3, 25)
 
 @Serializable
 data class AppConfig(
@@ -23,6 +24,7 @@ data class AppConfig(
     @SerialName("updateCheckEnabled") val updateCheckEnabled: Boolean = true,
     @SerialName("updateCheckIntervalHours") val updateCheckIntervalHours: Int = 24,
     @SerialName("lastUpdateCheckEpochSeconds") val lastUpdateCheckEpochSeconds: Long = 0L,
+    @SerialName("hibernateMode") val hibernateMode: Int? = null,
     @SerialName("firstRun") val firstRun: Boolean = true,
 ) {
     fun normalized(): AppConfig = copy(
@@ -31,6 +33,7 @@ data class AppConfig(
         lowTimeRemainingMinutes = lowTimeRemainingMinutes.coerceAtLeast(0),
         updateCheckIntervalHours = updateCheckIntervalHours.coerceIn(1, 168),
         lastUpdateCheckEpochSeconds = lastUpdateCheckEpochSeconds.coerceAtLeast(0L),
+        hibernateMode = hibernateMode?.takeIf { it in SUPPORTED_HIBERNATE_MODES },
     )
 }
 

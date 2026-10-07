@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-VERSION="0.1.0"
+VERSION="0.2.0"
 TAG="v$VERSION"
 DMG="$DIST/LidSleepX-$VERSION.dmg"
 NOTES="$ROOT/RELEASE_NOTES.md"
@@ -24,7 +24,7 @@ if [[ ! -f "$DMG" ]]; then
   exit 1
 fi
 
-# The app reads the /releases/latest endpoint.
+# The app reads the Releases page.
 # Therefore this release must stay a full release, not a pre-release.
 gh release create "$TAG" "$DMG" \
   --repo "$REPO" \

@@ -50,6 +50,11 @@ class ConfigStore(
         Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
     }
 
+    fun clear(): Boolean = runCatching {
+        Files.deleteIfExists(path)
+        Files.deleteIfExists(path.resolveSibling(path.fileName.toString() + ".tmp"))
+    }.isSuccess
+
     private fun decode(root: JsonObject): AppConfig {
         val defaults = AppConfig()
         fun bool(name: String, fallback: Boolean): Boolean =
@@ -60,6 +65,8 @@ class ConfigStore(
             root[name]?.jsonPrimitive?.longOrNull ?: fallback
         fun string(name: String, fallback: String): String =
             root[name]?.jsonPrimitive?.contentOrNull ?: fallback
+        fun nullableInt(name: String): Int? =
+            root[name]?.jsonPrimitive?.intOrNull
 
         return AppConfig(
             schemaVersion = int("schemaVersion", defaults.schemaVersion),
@@ -76,6 +83,7 @@ class ConfigStore(
             updateCheckEnabled = bool("updateCheckEnabled", defaults.updateCheckEnabled),
             updateCheckIntervalHours = int("updateCheckIntervalHours", defaults.updateCheckIntervalHours),
             lastUpdateCheckEpochSeconds = long("lastUpdateCheckEpochSeconds", defaults.lastUpdateCheckEpochSeconds),
+            hibernateMode = nullableInt("hibernateMode")?.takeIf { it in SUPPORTED_HIBERNATE_MODES },
             firstRun = bool("firstRun", defaults.firstRun),
         ).normalized()
     }

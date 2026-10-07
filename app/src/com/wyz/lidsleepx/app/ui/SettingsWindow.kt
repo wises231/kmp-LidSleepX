@@ -37,6 +37,7 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberWindowState
 import com.wyz.lidsleepx.core.APP_VERSION
 import com.wyz.lidsleepx.core.HelperStatus
+import com.wyz.lidsleepx.core.SUPPORTED_HIBERNATE_MODES
 
 private enum class SettingsSection { OVERVIEW, BATTERY, LID, IDLE, GENERAL }
 
@@ -190,13 +191,38 @@ private fun GeneralPage(runtime: AppRuntime) {
             Text(runtime.strings.checkUpdates)
         }
         Spacer(Modifier.height(12.dp))
+        Text(runtime.strings.sleepMode)
+        SleepModeOptions(runtime)
+        Spacer(Modifier.height(12.dp))
         Text(runtime.strings.language)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextButton(onClick = { runtime.changeLanguage(AppLanguage.ENGLISH) }) { Text("English") }
             TextButton(onClick = { runtime.changeLanguage(AppLanguage.SIMPLIFIED_CHINESE) }) { Text("简体中文") }
         }
+        Spacer(Modifier.height(18.dp))
+        TextButton(onClick = runtime::clearConfig, enabled = !runtime.busy) {
+            Text(runtime.strings.clearConfig)
+        }
         runtime.statusMessage?.let { Text(it, color = Color(0xFF0A7A32), modifier = Modifier.padding(top = 14.dp)) }
     }
+}
+
+@Composable
+private fun SleepModeOptions(runtime: AppRuntime) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        SUPPORTED_HIBERNATE_MODES.sorted().forEach { mode ->
+            val selected = runtime.config.hibernateMode == mode
+            TextButton(onClick = { runtime.setSleepMode(mode) }, enabled = !runtime.busy) {
+                Text((if (selected) "● " else "○ ") + sleepModeLabel(runtime.strings, mode))
+            }
+        }
+    }
+}
+
+private fun sleepModeLabel(strings: Strings, mode: Int): String = when (mode) {
+    0 -> strings.sleepMode0
+    3 -> strings.sleepMode3
+    else -> strings.sleepMode25
 }
 
 @Composable

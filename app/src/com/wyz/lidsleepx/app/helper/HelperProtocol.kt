@@ -3,6 +3,7 @@ package com.wyz.lidsleepx.app.helper
 import com.wyz.lidsleepx.core.APP_VERSION
 import com.wyz.lidsleepx.core.HelperReply
 import com.wyz.lidsleepx.core.HelperRequest
+import com.wyz.lidsleepx.core.SUPPORTED_HIBERNATE_MODES
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -15,7 +16,7 @@ object HelperProtocol {
     const val APP_PATH_FILE = "$HELPER_DIRECTORY/LidSleepX.app"
     const val LOG_PATH = "$HELPER_DIRECTORY/helper.log"
     const val PLIST_PATH = "/Library/LaunchDaemons/com.wyz.lidsleepx.helper.plist"
-    val allowedCommands = setOf("version", "setDisableSleep")
+    val allowedCommands = setOf("version", "setDisableSleep", "setHibernateMode")
     private val json = Json { ignoreUnknownKeys = true }
 
     fun decodeRequest(line: String): HelperRequest? = runCatching {
@@ -42,6 +43,10 @@ object HelperProtocol {
         if (request.command == "setDisableSleep") {
             val value = request.payload["disabled"] ?: return "Missing disabled value"
             if (value !in setOf("true", "false")) return "Invalid disabled value"
+        }
+        if (request.command == "setHibernateMode") {
+            val mode = request.payload["mode"]?.toIntOrNull() ?: return "Missing hibernate mode"
+            if (mode !in SUPPORTED_HIBERNATE_MODES) return "Invalid hibernate mode"
         }
         return null
     }

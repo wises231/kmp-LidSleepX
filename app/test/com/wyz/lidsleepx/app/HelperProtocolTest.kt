@@ -49,4 +49,28 @@ class HelperProtocolTest {
             ),
         )
     }
+
+    @Test
+    fun `protocol accepts only supported hibernate modes`() {
+        assertNull(
+            HelperProtocol.validate(
+                HelperRequest(
+                    HelperProtocol.PROTOCOL_VERSION,
+                    "abc",
+                    "setHibernateMode",
+                    mapOf("mode" to "25"),
+                ),
+            ),
+        )
+        assertNotNull(
+            HelperProtocol.validate(
+                HelperRequest(
+                    HelperProtocol.PROTOCOL_VERSION,
+                    "abc",
+                    "setHibernateMode",
+                    mapOf("mode" to "1"),
+                ),
+            ),
+        )
+    }
 }

@@ -21,10 +21,25 @@ internal interface IOKitLibrary : Library {
         allocator: Pointer?,
         options: Int,
     ): Pointer?
+    fun IONotificationPortCreate(mainPort: Int): Pointer?
+    fun IONotificationPortGetRunLoopSource(notificationPort: Pointer?): Pointer?
+    fun IONotificationPortDestroy(notificationPort: Pointer?)
+    fun IOServiceAddInterestNotification(
+        notificationPort: Pointer?,
+        service: Int,
+        interestType: String,
+        callback: IOServiceInterestCallback,
+        refCon: Pointer?,
+        notification: IntByReference,
+    ): Int
     fun IOObjectRelease(objectId: Int): Int
 }
 
 internal fun interface IOPowerCallback : Callback {
+    fun invoke(refCon: Pointer?, service: Int, messageType: Int, messageArgument: Pointer?)
+}
+
+internal fun interface IOServiceInterestCallback : Callback {
     fun invoke(refCon: Pointer?, service: Int, messageType: Int, messageArgument: Pointer?)
 }
 

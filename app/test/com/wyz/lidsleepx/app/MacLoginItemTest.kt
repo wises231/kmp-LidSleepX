@@ -13,6 +13,9 @@ class MacLoginItemTest {
         assertTrue(text.contains("<string>com.wyz.lidsleepx</string>"))
         assertTrue(text.contains("<string>/Applications/LidSleepX.app</string>"))
         assertTrue(text.contains("<key>RunAtLoad</key>"))
+        assertTrue(text.contains("<key>KeepAlive</key>"))
+        assertTrue(text.contains("<key>SuccessfulExit</key>"))
+        assertTrue(text.contains("<key>ProcessType</key>"))
     }
 
     @Test

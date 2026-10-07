@@ -15,6 +15,7 @@ class MacLoginItem(
     override fun enable(): Boolean = runCatching {
         Files.createDirectories(plistPath.parent)
         Files.writeString(plistPath, plistText(), StandardCharsets.UTF_8)
+        runCatching { launchctl("bootout", "gui/${currentUid()}", plistPath.toString()) }
         launchctl("bootstrap", "gui/${currentUid()}", plistPath.toString())
     }.getOrDefault(false)
 
@@ -73,7 +74,12 @@ class MacLoginItem(
             |    <key>RunAtLoad</key>
             |    <true/>
             |    <key>KeepAlive</key>
-            |    <false/>
+            |    <dict>
+            |        <key>SuccessfulExit</key>
+            |        <false/>
+            |    </dict>
+            |    <key>ProcessType</key>
+            |    <string>Interactive</string>
             |</dict>
             |</plist>
         """.trimMargin()

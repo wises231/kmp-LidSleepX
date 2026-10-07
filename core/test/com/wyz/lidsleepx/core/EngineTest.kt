@@ -244,6 +244,8 @@ private class FakePrivilegedOps : PrivilegedOps {
     override fun helperVersion() = APP_VERSION
     override fun install() = true
     override fun uninstall() = true
+    override fun hibernateMode(): Int? = null
+    override fun setHibernateMode(mode: Int) = true
     override fun setDisableSleep(disabled: Boolean): Boolean {
         disableSleepValues += disabled
         return true

@@ -110,6 +110,19 @@ private fun MenuScope.TrayMenu(runtime: AppRuntime, exitApplication: () -> Unit)
         )
     }
     Item(runtime.strings.checkUpdates) { runtime.checkForUpdates(manual = true) }
+    Menu(runtime.strings.sleepMode) {
+        listOf(0, 3, 25).forEach { mode ->
+            CheckboxItem(
+                text = when (mode) {
+                    0 -> runtime.strings.sleepMode0
+                    3 -> runtime.strings.sleepMode3
+                    else -> runtime.strings.sleepMode25
+                },
+                checked = runtime.config.hibernateMode == mode,
+                onCheckedChange = { if (it) runtime.setSleepMode(mode) },
+            )
+        }
+    }
     Separator()
     when (runtime.helperStatus) {
         HelperStatus.INSTALLED -> Item(runtime.strings.uninstallHelper) { runtime.uninstallHelper() }
@@ -122,6 +135,7 @@ private fun MenuScope.TrayMenu(runtime: AppRuntime, exitApplication: () -> Unit)
     }
     Item(runtime.strings.viewLog) { runtime.viewLog() }
     Item(runtime.strings.exportLog) { runtime.exportLog() }
+    Item(runtime.strings.clearConfig) { runtime.clearConfig() }
     Item(runtime.strings.about) { runtime.showAbout() }
     Separator()
     Item(runtime.strings.quit) {

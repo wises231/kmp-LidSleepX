@@ -51,6 +51,9 @@ class HelperClient(
     fun setDisableSleep(disabled: Boolean): Boolean =
         request("setDisableSleep", mapOf("disabled" to disabled.toString()))?.ok == true
 
+    fun setHibernateMode(mode: Int): Boolean =
+        request("setHibernateMode", mapOf("mode" to mode.toString()))?.ok == true
+
     private fun writeAll(
         channel: SocketChannel,
         selector: Selector,
