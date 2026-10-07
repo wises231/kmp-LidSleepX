@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5966a8"/>
+      <stop offset="1" stop-color="#171a35"/>
+    </linearGradient>
+    <mask id="moon">
+      <rect width="1024" height="1024" fill="white"/>
+      <circle cx="690" cy="410" r="240" fill="black"/>
+    </mask>
+  </defs>
+  <rect x="72" y="72" width="880" height="880" rx="202" fill="url(#bg)"/>
+  <circle cx="552" cy="512" r="270" fill="#f5dfa3" mask="url(#moon)"/>
+  <circle cx="742" cy="268" r="28" fill="#fff2bd"/>
+  <circle cx="824" cy="388" r="16" fill="#fff2bd"/>
+</svg>

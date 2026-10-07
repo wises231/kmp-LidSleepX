@@ -1,0 +1,10 @@
+product:
+  type: kmp/lib
+  platforms: [jvm]
+
+dependencies:
+  - $libs.kotlinx.serialization.json
+
+settings:
+  kotlin:
+    serialization: json

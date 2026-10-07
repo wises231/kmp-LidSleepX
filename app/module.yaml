@@ -1,0 +1,14 @@
+product: jvm/app
+
+dependencies:
+  - ../core
+  - $compose.desktop.currentOs
+  - $libs.kotlinx.coroutines.swing
+  - $libs.jna
+  - $libs.kotlinx.serialization.json
+
+settings:
+  compose:
+    enabled: true
+  kotlin:
+    serialization: json
