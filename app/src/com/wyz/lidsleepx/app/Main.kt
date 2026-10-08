@@ -69,6 +69,7 @@ fun main(args: Array<String>) {
 
 @Composable
 private fun MenuScope.TrayMenu(runtime: AppRuntime, exitApplication: () -> Unit) {
+    val lidControlsEnabled = runtime.helperStatus == HelperStatus.INSTALLED
     Menu(runtime.strings.appName, enabled = false) {}
     Item(
         text = runtime.state.battery?.let { AppRuntime.formatBattery(it, runtime.strings) } ?: runtime.strings.unknown,
@@ -91,6 +92,7 @@ private fun MenuScope.TrayMenu(runtime: AppRuntime, exitApplication: () -> Unit)
     CheckboxItem(
         text = runtime.strings.preventLidSleep,
         checked = !runtime.state.lidSleepAvailable,
+        enabled = lidControlsEnabled,
         onCheckedChange = { runtime.toggleLidSleep() },
     )
     Menu(runtime.strings.cancelAfter) {
@@ -100,7 +102,9 @@ private fun MenuScope.TrayMenu(runtime: AppRuntime, exitApplication: () -> Unit)
     }
     Menu(runtime.strings.cancelAfter + " - " + runtime.strings.preventLidSleep) {
         CANCELLATION_VALUES.forEach { seconds ->
-            Item(formatDuration(seconds, runtime.language)) { runtime.scheduleCancelLid(seconds) }
+            Item(formatDuration(seconds, runtime.language), enabled = lidControlsEnabled) {
+                runtime.scheduleCancelLid(seconds)
+            }
         }
     }
     Separator()

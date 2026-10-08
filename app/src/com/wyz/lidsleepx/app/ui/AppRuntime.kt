@@ -13,6 +13,7 @@ import com.wyz.lidsleepx.app.platform.MacPowerSource
 import com.wyz.lidsleepx.app.platform.MacPrivilegedOps
 import com.wyz.lidsleepx.app.platform.MacSleepController
 import com.wyz.lidsleepx.app.platform.MacSleepWatcher
+import com.wyz.lidsleepx.app.platform.PmsetWakeLogReader
 import com.wyz.lidsleepx.core.APP_VERSION
 import com.wyz.lidsleepx.core.AppConfig
 import com.wyz.lidsleepx.core.AppState
@@ -75,6 +76,7 @@ class AppRuntime {
     private val idle = CoreGraphicsIdleSensor()
     private val sleepController = MacSleepController()
     private val sleepWatcher = MacSleepWatcher()
+    private val wakeLogReader = PmsetWakeLogReader()
     private val privileged = MacPrivilegedOps(logger)
     private val loginItem = MacLoginItem()
     private val notifier = MacNotifier(logger) { config.notificationsEnabled }
@@ -89,8 +91,9 @@ class AppRuntime {
         sleepWatcher = sleepWatcher,
         privileged = privileged,
         logger = logger,
+        wakeLogReader = wakeLogReader,
         stateListener = { newState ->
-            state = newState
+            state = newState.copy(helperStatus = helperStatus)
         },
     )
 
@@ -150,7 +153,7 @@ class AppRuntime {
     }
 
     fun setEnabled(enabled: Boolean) {
-        updateConfig(config.copy(enabled = enabled))
+        if (!updateConfig(config.copy(enabled = enabled))) statusMessage = strings.lidPolicyError
     }
 
     fun setLowBatterySleep(enabled: Boolean) = updateConfig(config.copy(lowBatteryCapacitySleep = enabled))
@@ -161,7 +164,25 @@ class AppRuntime {
         if (valid) updateConfig(config.copy(lowTimeRemainingMinutes = value.coerceAtLeast(0)))
     }
     fun setDisableIdleWhileCharging(enabled: Boolean) = updateConfig(config.copy(disableIdleSleepInCharging = enabled))
-    fun setDisableLidWhileCharging(enabled: Boolean) = updateConfig(config.copy(disableLidSleepInCharging = enabled))
+    fun setDisableLidWhileCharging(enabled: Boolean) {
+        if (enabled && !lidPolicyAvailable()) {
+            statusMessage = strings.helperOutdated
+            return
+        }
+        if (!updateConfig(config.copy(disableLidSleepInCharging = enabled))) {
+            statusMessage = strings.lidPolicyError
+        }
+    }
+    fun setDisableLidOnBattery(enabled: Boolean) {
+        if (enabled && !lidPolicyAvailable()) {
+            statusMessage = strings.helperOutdated
+            return
+        }
+        if (!updateConfig(config.copy(disableLidSleepOnBattery = enabled))) {
+            statusMessage = strings.lidPolicyError
+        }
+    }
+    fun setDarkWakeAwareness(enabled: Boolean) = updateConfig(config.copy(darkWakeAwarenessEnabled = enabled))
     fun setImmediateLidSleep(enabled: Boolean) = updateConfig(config.copy(lidSleepImmediateOnClose = enabled))
     fun setNotifications(enabled: Boolean) = updateConfig(config.copy(notificationsEnabled = enabled))
     fun setUpdateChecks(enabled: Boolean) = updateConfig(config.copy(updateCheckEnabled = enabled))
@@ -221,8 +242,12 @@ class AppRuntime {
 
     fun toggleLidSleep() {
         val makeAvailable = !state.lidSleepAvailable
-        if (!makeAvailable) updateConfig(config.copy(lidSleepImmediateOnClose = false))
-        engine.setLidSleepAvailable(makeAvailable)
+        if (!makeAvailable && !lidPolicyAvailable()) {
+            statusMessage = strings.helperOutdated
+            return
+        }
+        engine.setManualLidSleepAvailable(makeAvailable)
+        state = engine.currentState.copy(helperStatus = helperStatus)
     }
 
     fun scheduleCancelIdle(seconds: Long) = engine.scheduleCancelIdle(seconds)
@@ -249,6 +274,7 @@ class AppRuntime {
         scope.launch {
             val removed = privileged.uninstall()
             helperStatus = HelperStatus.NOT_INSTALLED
+            engine.setLidSleepAvailable(true)
             state = engine.currentState.copy(helperStatus = helperStatus)
             busy = false
             statusMessage = if (removed) strings.helperNotInstalled else strings.helperUninstallError
@@ -305,14 +331,21 @@ class AppRuntime {
         statusMessage = null
     }
 
-    private fun updateConfig(newConfig: AppConfig) {
+    private fun updateConfig(newConfig: AppConfig): Boolean {
+        val previous = config
         val normalized = newConfig.copy(
             launchAtLogin = loginItem.isEnabled(),
         ).normalized()
         config = normalized
         configStore.save(normalized)
-        engine.updateConfig(normalized)
-        state = engine.currentState
+        val success = engine.updateConfig(normalized)
+        if (!success) {
+            config = previous
+            configStore.save(previous)
+            engine.updateConfig(previous)
+        }
+        state = engine.currentState.copy(helperStatus = helperStatus)
+        return success
     }
 
     private suspend fun refreshHelperStatus(waitForInstalled: Boolean = false) {
@@ -321,6 +354,7 @@ class AppRuntime {
         if (helperStatus == status) return
         helperStatus = status
         state = engine.currentState.copy(helperStatus = status)
+        if (status == HelperStatus.INSTALLED) engine.updateConfig(config)
     }
 
     private fun loginItemSync() {
@@ -337,6 +371,8 @@ class AppRuntime {
         config = config.copy(hibernateMode = actual)
         configStore.save(config)
     }
+
+    private fun lidPolicyAvailable(): Boolean = helperStatus == HelperStatus.INSTALLED
 
     companion object {
         fun formatBattery(battery: com.wyz.lidsleepx.core.BatteryStatus, strings: Strings): String {

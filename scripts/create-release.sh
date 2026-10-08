@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-VERSION="0.2.1"
+VERSION="0.3.0"
 TAG="v$VERSION"
 DMG="$DIST/LidSleepX-$VERSION.dmg"
 NOTES="$ROOT/RELEASE_NOTES.md"

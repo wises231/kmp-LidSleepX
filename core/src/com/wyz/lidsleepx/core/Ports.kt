@@ -28,8 +28,12 @@ interface SleepController {
 }
 
 interface SleepWatcher {
-    fun subscribe(onWillSleep: () -> Unit, onDidWake: () -> Unit)
+    fun subscribe(listener: (SleepEvent) -> Unit)
     fun stop()
+}
+
+fun interface WakeLogReader {
+    fun read(): WakeLogSnapshot?
 }
 
 interface PrivilegedOps {

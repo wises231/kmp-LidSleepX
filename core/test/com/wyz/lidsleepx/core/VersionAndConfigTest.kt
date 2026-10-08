@@ -30,6 +30,43 @@ class VersionAndConfigTest {
     }
 
     @Test
+    fun `version one config migrates new fields to version two defaults`() {
+        val directory = Files.createTempDirectory("lidsleepx-config")
+        val path = directory.resolve("config.json")
+        Files.writeString(
+            path,
+            """{"schemaVersion":1,"enabled":false,"disableLidSleepInCharging":true}""",
+        )
+        val store = ConfigStore(path)
+        val loaded = store.load()
+
+        assertEquals(2, loaded.schemaVersion)
+        assertFalse(loaded.enabled)
+        assertTrue(loaded.disableLidSleepInCharging)
+        assertFalse(loaded.disableLidSleepOnBattery)
+        assertTrue(loaded.darkWakeAwarenessEnabled)
+
+        store.save(loaded)
+        val saved = store.load()
+        assertEquals(2, saved.schemaVersion)
+        assertFalse(saved.disableLidSleepOnBattery)
+        assertTrue(saved.darkWakeAwarenessEnabled)
+    }
+
+    @Test
+    fun `version two presets survive a save and load cycle`() {
+        val directory = Files.createTempDirectory("lidsleepx-config")
+        val path = directory.resolve("config.json")
+        val store = ConfigStore(path)
+        store.save(AppConfig(disableLidSleepOnBattery = true, darkWakeAwarenessEnabled = false))
+
+        val loaded = store.load()
+        assertEquals(2, loaded.schemaVersion)
+        assertTrue(loaded.disableLidSleepOnBattery)
+        assertFalse(loaded.darkWakeAwarenessEnabled)
+    }
+
+    @Test
     fun `invalid config values fall back and unknown fields survive save`() {
         val directory = Files.createTempDirectory("lidsleepx-config")
         val path = directory.resolve("config.json")

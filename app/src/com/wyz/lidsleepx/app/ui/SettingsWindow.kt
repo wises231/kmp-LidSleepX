@@ -38,6 +38,9 @@ import androidx.compose.ui.window.rememberWindowState
 import com.wyz.lidsleepx.core.APP_VERSION
 import com.wyz.lidsleepx.core.HelperStatus
 import com.wyz.lidsleepx.core.SUPPORTED_HIBERNATE_MODES
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 private enum class SettingsSection { OVERVIEW, BATTERY, LID, IDLE, GENERAL }
 
@@ -150,15 +153,23 @@ private fun BatteryPage(runtime: AppRuntime) {
 
 @Composable
 private fun LidPage(runtime: AppRuntime) {
+    val controlsEnabled = runtime.helperStatus == HelperStatus.INSTALLED
     PageColumn(runtime.strings.lid) {
         SettingSwitch(runtime.strings.immediateSleepOnLid, runtime.config.lidSleepImmediateOnClose) {
             runtime.setImmediateLidSleep(it)
         }
-        SettingSwitch(runtime.strings.preventLidSleep, !runtime.state.lidSleepAvailable) {
+        SettingSwitch(runtime.strings.preventLidSleep, !runtime.state.lidSleepAvailable, controlsEnabled) {
             runtime.toggleLidSleep()
         }
-        SettingSwitch(runtime.strings.disableLidOnPower, runtime.config.disableLidSleepInCharging) {
+        SettingSwitch(runtime.strings.disableLidOnPower, runtime.config.disableLidSleepInCharging, controlsEnabled) {
             runtime.setDisableLidWhileCharging(it)
+        }
+        SettingSwitch(runtime.strings.disableLidOnBattery, runtime.config.disableLidSleepOnBattery, controlsEnabled) {
+            runtime.setDisableLidOnBattery(it)
+        }
+        Text(runtime.strings.batteryLidWarning, color = Color(0xFFB25000))
+        if (!controlsEnabled) {
+            Text(runtime.strings.helperOutdated, color = Color(0xFFB25000), modifier = Modifier.padding(top = 10.dp))
         }
     }
 }
@@ -191,6 +202,11 @@ private fun GeneralPage(runtime: AppRuntime) {
             Text(runtime.strings.checkUpdates)
         }
         Spacer(Modifier.height(12.dp))
+        SettingSwitch(runtime.strings.darkWakeAwareness, runtime.config.darkWakeAwarenessEnabled) {
+            runtime.setDarkWakeAwareness(it)
+        }
+        DarkWakeStatus(runtime)
+        Spacer(Modifier.height(12.dp))
         Text(runtime.strings.sleepMode)
         SleepModeOptions(runtime)
         Spacer(Modifier.height(12.dp))
@@ -205,6 +221,27 @@ private fun GeneralPage(runtime: AppRuntime) {
         }
         runtime.statusMessage?.let { Text(it, color = Color(0xFF0A7A32), modifier = Modifier.padding(top = 14.dp)) }
     }
+}
+
+@Composable
+private fun DarkWakeStatus(runtime: AppRuntime) {
+    val status = runtime.state.darkWake
+    Text(runtime.strings.darkWakeStatus, modifier = Modifier.padding(top = 10.dp, bottom = 2.dp))
+    when {
+        status.scanning -> StatusRow(runtime.strings.darkWakeScanning)
+        !status.available -> StatusRow(runtime.strings.darkWakeUnavailable)
+        else -> {
+            val last = status.lastAtEpochSeconds?.let { formatWakeTime(it) } ?: runtime.strings.unknown
+            StatusRow("${runtime.strings.darkWakeLast}: $last")
+            StatusRow("${runtime.strings.darkWakeReason}: ${status.lastReason ?: runtime.strings.unknown}")
+            StatusRow("${runtime.strings.darkWakeCount24h}: ${status.count24h}")
+        }
+    }
+}
+
+private fun formatWakeTime(epochSeconds: Long): String {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    return formatter.withZone(ZoneId.systemDefault()).format(Instant.ofEpochSecond(epochSeconds))
 }
 
 @Composable
@@ -239,13 +276,18 @@ private fun StatusRow(text: String) {
 }
 
 @Composable
-private fun SettingSwitch(text: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun SettingSwitch(
+    text: String,
+    checked: Boolean,
+    enabled: Boolean = true,
+    onChange: (Boolean) -> Unit,
+) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
+        Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
     }
 }
 

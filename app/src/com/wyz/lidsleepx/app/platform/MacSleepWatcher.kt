@@ -4,6 +4,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
+import com.wyz.lidsleepx.core.SleepEvent
 import com.wyz.lidsleepx.core.SleepWatcher
 
 internal interface IOKitSleepLibrary : com.sun.jna.Library {
@@ -33,8 +34,7 @@ internal interface IOKitSleepLibrary : com.sun.jna.Library {
 class MacSleepWatcher : SleepWatcher {
     private val cf = MacNative.coreFoundation
     private val library: IOKitSleepLibrary = Native.load("IOKit", IOKitSleepLibrary::class.java)
-    @Volatile private var onWillSleep: (() -> Unit)? = null
-    @Volatile private var onDidWake: (() -> Unit)? = null
+    @Volatile private var listener: ((SleepEvent) -> Unit)? = null
     @Volatile private var rootPort = 0
     @Volatile private var runLoop: Pointer? = null
     @Volatile private var stopped = false
@@ -45,18 +45,17 @@ class MacSleepWatcher : SleepWatcher {
     private val callback = IOPowerCallback { refCon: Pointer?, service: Int, messageType: Int, argument: Pointer? ->
         when (messageType) {
             MESSAGE_SYSTEM_WILL_SLEEP -> {
-                onWillSleep?.invoke()
+                listener?.invoke(SleepEvent.WillSleep)
                 if (rootPort != 0 && argument != null) {
                     library.IOAllowPowerChange(rootPort, Pointer.nativeValue(argument))
                 }
             }
-            MESSAGE_SYSTEM_WILL_POWER_ON, MESSAGE_SYSTEM_HAS_POWERED_ON -> onDidWake?.invoke()
+            MESSAGE_SYSTEM_WILL_POWER_ON, MESSAGE_SYSTEM_HAS_POWERED_ON -> listener?.invoke(SleepEvent.WakeSignal)
         }
     }
 
-    override fun subscribe(onWillSleep: () -> Unit, onDidWake: () -> Unit) {
-        this.onWillSleep = onWillSleep
-        this.onDidWake = onDidWake
+    override fun subscribe(listener: (SleepEvent) -> Unit) {
+        this.listener = listener
         stopped = false
         thread = Thread {
             val port = PointerByReference()
@@ -85,8 +84,7 @@ class MacSleepWatcher : SleepWatcher {
             rootPort = 0
             notificationPort = null
         }
-        onWillSleep = null
-        onDidWake = null
+        listener = null
     }
 
     companion object {

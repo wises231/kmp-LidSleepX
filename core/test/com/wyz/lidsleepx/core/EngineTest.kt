@@ -7,6 +7,308 @@ import kotlin.test.assertTrue
 
 class EngineTest {
     @Test
+    fun `start scans wake log and updates dark wake status`() {
+        val event = WakeEvent(WakeKind.DARK, 1_000L, "RTC")
+        var reads = 0
+        val fixture = Fixture(
+            wakeLogReader = WakeLogReader {
+                reads += 1
+                WakeLogSnapshot(listOf(event), darkWakeCount24h = 1)
+            },
+        )
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, null)
+        fixture.engine.start()
+
+        assertEquals(1, reads)
+        assertTrue(fixture.engine.currentState.darkWake.available)
+        assertEquals(1_000L, fixture.engine.currentState.darkWake.lastAtEpochSeconds)
+        assertEquals("RTC", fixture.engine.currentState.darkWake.lastReason)
+        assertEquals(1, fixture.engine.currentState.darkWake.count24h)
+    }
+
+    @Test
+    fun `dark wake does not restore sleep now restrictions`() {
+        var snapshot = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 1_000L, "Initial")),
+            darkWakeCount24h = 1,
+        )
+        val fixture = Fixture(
+            wakeLogReader = WakeLogReader { snapshot },
+        )
+        fixture.privileged.installed = true
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, null)
+        fixture.engine.start()
+        fixture.engine.setIdleSleepAvailable(false)
+        fixture.engine.setLidSleepAvailable(false)
+        fixture.engine.sleepNow()
+        assertTrue(fixture.engine.currentState.idleSleepAvailable)
+        assertTrue(fixture.engine.currentState.lidSleepAvailable)
+
+        snapshot = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 2_000L, "RTC")),
+            darkWakeCount24h = 2,
+        )
+        fixture.watcher.wake()
+
+        assertTrue(fixture.engine.currentState.idleSleepAvailable)
+        assertTrue(fixture.engine.currentState.lidSleepAvailable)
+        assertEquals(2_000L, fixture.engine.currentState.darkWake.lastAtEpochSeconds)
+    }
+
+    @Test
+    fun `full wake restores sleep now restrictions`() {
+        var snapshot = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 1_000L, "Initial")),
+            darkWakeCount24h = 1,
+        )
+        val fixture = Fixture(
+            wakeLogReader = WakeLogReader { snapshot },
+        )
+        fixture.privileged.installed = true
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, null)
+        fixture.engine.start()
+        fixture.engine.setIdleSleepAvailable(false)
+        fixture.engine.setLidSleepAvailable(false)
+        fixture.engine.sleepNow()
+
+        snapshot = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.FULL, 2_000L, "UserActivity")),
+            darkWakeCount24h = 1,
+        )
+        fixture.watcher.wake()
+
+        assertFalse(fixture.engine.currentState.idleSleepAvailable)
+        assertFalse(fixture.engine.currentState.lidSleepAvailable)
+    }
+
+    @Test
+    fun `overlapping wake signals share one log scan`() {
+        var snapshot = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 1_000L, "Initial")),
+            darkWakeCount24h = 1,
+        )
+        val queued = mutableListOf<Runnable>()
+        var reads = 0
+        val fixture = Fixture(
+            wakeLogReader = WakeLogReader {
+                reads += 1
+                snapshot
+            },
+            wakeScanExecutor = { queued += it },
+        )
+        fixture.engine.start()
+        assertEquals(1, queued.size)
+        queued.removeAt(0).run()
+        assertEquals(1, reads)
+
+        snapshot = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 2_000L, "RTC")),
+            darkWakeCount24h = 2,
+        )
+        fixture.watcher.wake()
+        fixture.watcher.wake()
+
+        assertEquals(1, queued.size)
+        queued.removeAt(0).run()
+        assertEquals(2, reads)
+    }
+
+    @Test
+    fun `wake scan retries an unchanged log snapshot`() {
+        val initial = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 1_000L, "Initial")),
+            darkWakeCount24h = 1,
+        )
+        val updated = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 2_000L, "RTC")),
+            darkWakeCount24h = 2,
+        )
+        var reads = 0
+        var delays = 0
+        val fixture = Fixture(
+            wakeLogReader = WakeLogReader {
+                reads += 1
+                if (reads <= 2) initial else updated
+            },
+            wakeDelay = { delays += 1 },
+        )
+        fixture.engine.start()
+        fixture.watcher.wake()
+
+        assertEquals(3, reads)
+        assertEquals(2, delays)
+        assertEquals(2_000L, fixture.engine.currentState.darkWake.lastAtEpochSeconds)
+    }
+
+    @Test
+    fun `wake log failure restores sleep now restrictions and marks status unavailable`() {
+        var snapshot: WakeLogSnapshot? = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 1_000L, "Initial")),
+            darkWakeCount24h = 1,
+        )
+        val fixture = Fixture(
+            wakeLogReader = WakeLogReader { snapshot },
+        )
+        fixture.privileged.installed = true
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, null)
+        fixture.engine.start()
+        fixture.engine.setIdleSleepAvailable(false)
+        fixture.engine.setLidSleepAvailable(false)
+        fixture.engine.sleepNow()
+
+        snapshot = null
+        fixture.watcher.wake()
+
+        assertFalse(fixture.engine.currentState.darkWake.available)
+        assertFalse(fixture.engine.currentState.idleSleepAvailable)
+        assertFalse(fixture.engine.currentState.lidSleepAvailable)
+        assertTrue(fixture.logger.messages.any { it.contains("Wake log parsing failed") })
+    }
+
+    @Test
+    fun `wake log refresh is cached for 60 seconds`() {
+        var nowMillis = 1_000_000L
+        var snapshot = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 1_000L, "Initial")),
+            darkWakeCount24h = 1,
+        )
+        var reads = 0
+        val fixture = Fixture(
+            wakeLogReader = WakeLogReader {
+                reads += 1
+                snapshot
+            },
+            wakeCacheNowMillis = { nowMillis },
+        )
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, null)
+        fixture.engine.start()
+        assertEquals(1, reads)
+
+        fixture.engine.stop()
+        snapshot = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 2_000L, "RTC")),
+            darkWakeCount24h = 2,
+        )
+        nowMillis += 61_000L
+        fixture.engine.start()
+
+        assertEquals(2, reads)
+        assertEquals(2_000L, fixture.engine.currentState.darkWake.lastAtEpochSeconds)
+    }
+
+    @Test
+    fun `new wake event bypasses the cache`() {
+        var snapshot = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 1_000L, "Initial")),
+            darkWakeCount24h = 1,
+        )
+        val fixture = Fixture(
+            wakeLogReader = WakeLogReader { snapshot },
+        )
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, null)
+        fixture.engine.start()
+
+        snapshot = WakeLogSnapshot(
+            listOf(
+                WakeEvent(WakeKind.DARK, 1_000L, "Initial"),
+                WakeEvent(WakeKind.FULL, 2_000L, "UserActivity"),
+            ),
+            darkWakeCount24h = 1,
+        )
+        fixture.watcher.wake()
+
+        assertEquals(2_000L, fixture.engine.currentState.darkWake.lastAtEpochSeconds)
+        assertEquals("UserActivity", fixture.engine.currentState.darkWake.lastReason)
+    }
+
+    @Test
+    fun `wake log failure keeps the previous status data`() {
+        var snapshot: WakeLogSnapshot? = WakeLogSnapshot(
+            listOf(WakeEvent(WakeKind.DARK, 1_000L, "RTC")),
+            darkWakeCount24h = 1,
+        )
+        val fixture = Fixture(
+            wakeLogReader = WakeLogReader { snapshot },
+        )
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, null)
+        fixture.engine.start()
+
+        snapshot = null
+        fixture.watcher.wake()
+
+        val status = fixture.engine.currentState.darkWake
+        assertFalse(status.available)
+        assertEquals(1_000L, status.lastAtEpochSeconds)
+        assertEquals("RTC", status.lastReason)
+        assertEquals(1, status.count24h)
+    }
+
+    @Test
+    fun `battery policy holds lid sleep on battery power`() {
+        val fixture = Fixture(
+            AppConfig(
+                disableLidSleepOnBattery = true,
+                lidSleepImmediateOnClose = false,
+            ),
+        )
+        fixture.privileged.installed = true
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, 3_600L)
+        fixture.engine.start()
+
+        assertFalse(fixture.engine.currentState.lidSleepAvailable)
+        assertTrue(fixture.privileged.disableSleepValues.contains(true))
+    }
+
+    @Test
+    fun `manual lid hold is released on request`() {
+        val fixture = Fixture(AppConfig(lidSleepImmediateOnClose = false))
+        fixture.privileged.installed = true
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, 3_600L)
+        fixture.engine.start()
+
+        fixture.engine.setManualLidSleepAvailable(false)
+        assertFalse(fixture.engine.currentState.lidSleepAvailable)
+
+        fixture.engine.setManualLidSleepAvailable(true)
+        assertTrue(fixture.engine.currentState.lidSleepAvailable)
+    }
+
+    @Test
+    fun `low battery policy overrides battery lid hold`() {
+        val fixture = Fixture(
+            AppConfig(
+                disableLidSleepOnBattery = true,
+                lowBatteryCapacity = 10,
+                lidSleepImmediateOnClose = false,
+            ),
+        )
+        fixture.privileged.installed = true
+        fixture.power.value = BatteryStatus(5, PowerState.DISCHARGING, 3_600L)
+        fixture.engine.start()
+
+        assertEquals(1, fixture.sleep.sleepCalls)
+        assertTrue(fixture.engine.currentState.lidSleepAvailable)
+        assertFalse(fixture.privileged.disableSleepValues.contains(true))
+    }
+
+    @Test
+    fun `helper failure rolls back lid policy config`() {
+        val fixture = Fixture(AppConfig(lidSleepImmediateOnClose = false))
+        fixture.privileged.installed = true
+        fixture.privileged.disableSleepResult = false
+        fixture.power.value = BatteryStatus(80, PowerState.DISCHARGING, 3_600L)
+        fixture.engine.start()
+
+        val success = fixture.engine.updateConfig(
+            fixture.engine.currentConfig.copy(disableLidSleepOnBattery = true),
+        )
+
+        assertFalse(success)
+        assertFalse(fixture.engine.currentConfig.disableLidSleepOnBattery)
+        assertTrue(fixture.engine.currentState.lidSleepAvailable)
+    }
+
+    @Test
     fun `low battery capacity triggers sleep only while discharging`() {
         val fixture = Fixture(AppConfig(lowBatteryCapacity = 6))
         fixture.power.value = BatteryStatus(6, PowerState.DISCHARGING, null)
@@ -177,6 +479,10 @@ class EngineTest {
 private class Fixture(
     config: AppConfig = AppConfig(),
     clock: () -> Long = System::currentTimeMillis,
+    wakeLogReader: WakeLogReader = WakeLogReader { null },
+    wakeScanExecutor: ((Runnable) -> Unit) = { it.run() },
+    wakeDelay: (Long) -> Unit = {},
+    wakeCacheNowMillis: () -> Long = System::currentTimeMillis,
 ) {
     val power = FakePower()
     val lid = FakeLid()
@@ -194,7 +500,11 @@ private class Fixture(
         sleepWatcher = watcher,
         privileged = privileged,
         logger = logger,
+        wakeLogReader = wakeLogReader,
         clock = clock,
+        wakeScanExecutor = wakeScanExecutor,
+        wakeDelay = wakeDelay,
+        wakeCacheNowMillis = wakeCacheNowMillis,
     )
 }
 
@@ -230,14 +540,16 @@ private class FakeSleepController : SleepController {
 }
 
 private class FakeSleepWatcher : SleepWatcher {
-    private var wake: (() -> Unit)? = null
-    override fun subscribe(onWillSleep: () -> Unit, onDidWake: () -> Unit) { wake = onDidWake }
-    override fun stop() { wake = null }
-    fun wake() { wake?.invoke() }
+    private var listener: ((SleepEvent) -> Unit)? = null
+    override fun subscribe(listener: (SleepEvent) -> Unit) { this.listener = listener }
+    override fun stop() { listener = null }
+    fun willSleep() { listener?.invoke(SleepEvent.WillSleep) }
+    fun wake() { listener?.invoke(SleepEvent.WakeSignal) }
 }
 
 private class FakePrivilegedOps : PrivilegedOps {
     var installed = false
+    var disableSleepResult = true
     val disableSleepValues = mutableListOf<Boolean>()
     override fun isInstalled() = installed
     override fun status() = if (installed) HelperStatus.INSTALLED else HelperStatus.NOT_INSTALLED
@@ -248,7 +560,7 @@ private class FakePrivilegedOps : PrivilegedOps {
     override fun setHibernateMode(mode: Int) = true
     override fun setDisableSleep(disabled: Boolean): Boolean {
         disableSleepValues += disabled
-        return true
+        return disableSleepResult
     }
 }
 

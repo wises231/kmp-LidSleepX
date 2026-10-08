@@ -78,6 +78,8 @@ class ConfigStore(
             lowTimeRemainingMinutes = int("lowTimeRemaining", defaults.lowTimeRemainingMinutes),
             disableIdleSleepInCharging = bool("disableIdleSleepInCharging", defaults.disableIdleSleepInCharging),
             disableLidSleepInCharging = bool("disableLidSleepInCharging", defaults.disableLidSleepInCharging),
+            disableLidSleepOnBattery = bool("disableLidSleepOnBattery", defaults.disableLidSleepOnBattery),
+            darkWakeAwarenessEnabled = bool("darkWakeAwarenessEnabled", defaults.darkWakeAwarenessEnabled),
             lidSleepImmediateOnClose = bool("lidSleepImmediateOnClose", defaults.lidSleepImmediateOnClose),
             notificationsEnabled = bool("notificationsEnabled", defaults.notificationsEnabled),
             updateCheckEnabled = bool("updateCheckEnabled", defaults.updateCheckEnabled),

@@ -3,14 +3,14 @@ package com.wyz.lidsleepx.core
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-const val APP_VERSION = "0.2.1"
+const val APP_VERSION = "0.3.0"
 const val APP_ID = "com.wyz.lidsleepx"
 const val APP_NAME = "LidSleepX"
 val SUPPORTED_HIBERNATE_MODES = setOf(0, 3, 25)
 
 @Serializable
 data class AppConfig(
-    @SerialName("schemaVersion") val schemaVersion: Int = 1,
+    @SerialName("schemaVersion") val schemaVersion: Int = 2,
     @SerialName("language") val language: String = "",
     @SerialName("enabled") val enabled: Boolean = true,
     @SerialName("launchAtLogin") val launchAtLogin: Boolean = false,
@@ -19,6 +19,8 @@ data class AppConfig(
     @SerialName("lowTimeRemaining") val lowTimeRemainingMinutes: Int = 10,
     @SerialName("disableIdleSleepInCharging") val disableIdleSleepInCharging: Boolean = false,
     @SerialName("disableLidSleepInCharging") val disableLidSleepInCharging: Boolean = false,
+    @SerialName("disableLidSleepOnBattery") val disableLidSleepOnBattery: Boolean = false,
+    @SerialName("darkWakeAwarenessEnabled") val darkWakeAwarenessEnabled: Boolean = true,
     @SerialName("lidSleepImmediateOnClose") val lidSleepImmediateOnClose: Boolean = true,
     @SerialName("notificationsEnabled") val notificationsEnabled: Boolean = true,
     @SerialName("updateCheckEnabled") val updateCheckEnabled: Boolean = true,
@@ -28,7 +30,7 @@ data class AppConfig(
     @SerialName("firstRun") val firstRun: Boolean = true,
 ) {
     fun normalized(): AppConfig = copy(
-        schemaVersion = 1,
+        schemaVersion = 2,
         lowBatteryCapacity = lowBatteryCapacity.coerceIn(0, 100),
         lowTimeRemainingMinutes = lowTimeRemainingMinutes.coerceAtLeast(0),
         updateCheckIntervalHours = updateCheckIntervalHours.coerceIn(1, 168),
@@ -60,6 +62,31 @@ enum class LidState { UNKNOWN, OPEN, CLOSED }
 
 enum class HelperStatus { NOT_INSTALLED, INSTALLED, OUTDATED, ERROR }
 
+enum class SleepEvent { WillSleep, WakeSignal }
+
+enum class WakeKind { DARK, FULL }
+
+data class WakeEvent(
+    val kind: WakeKind,
+    val atEpochSeconds: Long,
+    val reason: String = "",
+)
+
+data class WakeLogSnapshot(
+    val events: List<WakeEvent>,
+    val darkWakeCount24h: Int,
+) {
+    val latest: WakeEvent? get() = events.lastOrNull()
+}
+
+data class DarkWakeStatus(
+    val available: Boolean = false,
+    val scanning: Boolean = false,
+    val lastAtEpochSeconds: Long? = null,
+    val lastReason: String? = null,
+    val count24h: Int = 0,
+)
+
 data class UpdateInfo(
     val version: String,
     val title: String,
@@ -75,6 +102,7 @@ data class AppState(
     val lidSleepAvailable: Boolean = true,
     val idleCancelRemainingSeconds: Long? = null,
     val lidCancelRemainingSeconds: Long? = null,
+    val darkWake: DarkWakeStatus = DarkWakeStatus(),
     val helperStatus: HelperStatus = HelperStatus.NOT_INSTALLED,
     val lastError: String? = null,
 )
