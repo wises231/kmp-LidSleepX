@@ -3,11 +3,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-VERSION="0.3.0"
+VERSION="0.4.0"
 TAG="v$VERSION"
-DMG="$DIST/LidSleepX-$VERSION.dmg"
+DMG="$DIST/MacIsland-$VERSION.dmg"
 NOTES="$ROOT/RELEASE_NOTES.md"
-REPO="wises231/kmp-LidSleepX"
+REPO="wises231/kmp-MacIsland"
 
 if ! command -v gh >/dev/null 2>&1; then
   printf 'Install the GitHub CLI first: brew install gh\n' >&2
@@ -28,7 +28,7 @@ fi
 # Therefore this release must stay a full release, not a pre-release.
 gh release create "$TAG" "$DMG" \
   --repo "$REPO" \
-  --title "LidSleepX $VERSION (internal test)" \
+  --title "MacIsland $VERSION (internal test)" \
   --notes-file "$NOTES"
 
 printf 'Created release %s in %s\n' "$TAG" "$REPO"

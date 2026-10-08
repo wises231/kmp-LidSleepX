@@ -1,107 +1,106 @@
-# LidSleepX
+# MacIsland
 
-LidSleepX is a menu-bar app that controls macOS sleep behavior.
-It watches the battery, the lid, and the idle timer.
-It needs a privileged helper to change macOS sleep and hibernation settings.
+MacIsland is a macOS menu-bar app.
+It controls sleep behavior and provides a screenshot toolbar at the top of the screen.
 
-The project is an independent implementation.
-It does not share code, text, or assets with other projects.
+MacIsland is an independent implementation.
+It does not use the Tendedero name, icon, or documentation images.
 
 ## Download (internal test)
 
 This repository is under internal test.
 The current build is not a public release.
 
-Download the latest internal build:
-
-- [LidSleepX-0.3.0.dmg](https://github.com/wises231/kmp-LidSleepX/releases/download/v0.3.0/LidSleepX-0.3.0.dmg)
-- [Release page](https://github.com/wises231/kmp-LidSleepX/releases/tag/v0.3.0)
+- [MacIsland-0.4.0.dmg](https://github.com/wises231/kmp-MacIsland/releases/download/v0.4.0/MacIsland-0.4.0.dmg)
+- [Release page](https://github.com/wises231/kmp-MacIsland/releases/tag/v0.4.0)
 
 Install steps:
 
-1. Open `LidSleepX-0.3.0.dmg`.
-2. Drag `LidSleepX.app` to `Applications`.
-3. Open `LidSleepX.app`.
+1. Open `MacIsland-0.4.0.dmg`.
+2. Drag `MacIsland.app` to `Applications`.
+3. Open `MacIsland.app`.
+
+MacIsland uses a clean install.
+MacIsland does not copy LidSleepX settings or helper files.
+The old LidSleepX app, helper, and settings remain unchanged.
 
 **Warning:** This build uses an ad-hoc signature.
 macOS Gatekeeper rejects this build.
 If macOS blocks the app, allow the app in the "Privacy & Security" settings, or clear the quarantine flag:
 
 ```sh
-xattr -dr com.apple.quarantine /Applications/LidSleepX.app
+xattr -dr com.apple.quarantine /Applications/MacIsland.app
 ```
 
 The download has this SHA-256 checksum:
 
 ```text
-c5032016ec68846dde82a52de2e1467c0e9be4cb062c81dd709f93040d39eb73  LidSleepX-0.3.0.dmg
+0e9e2dc02be19f4735a5006276d43bc7921586503c7c6887b6fc9b00fe8fe50e  MacIsland-0.4.0.dmg
 ```
 
-## Internal test notes
+## What is new in 0.4.0
 
-- Use a test Mac. LidSleepX changes system sleep behavior.
-- Keep important work open only if you accept a possible system sleep.
-- The helper runs as root. Install it only from this repository.
-- The app changes `pmset disablesleep` and `pmset hibernatemode`.
-- Remove the helper from the Tray menu before you stop the test.
-- Export the log when you report a problem.
-- The export replaces your home directory with `~`.
-- This build has no Developer ID signature and no notarization.
-- This build has no Intel or Universal 2 package.
-- This build has no App Store package.
-- This build does not download or install updates.
+- The app is now MacIsland.
+- The app keeps the sleep, lid, DarkWake, helper, and LaunchAgent functions.
+- The app adds a full-width screenshot toolbar at the top of the mouse screen.
+- Screenshot takeover is on by default.
+- New screenshots appear in the toolbar.
+- A click copies the image and file URL.
+- A double-click opens the preview.
+- A long press opens macOS Markup. If Markup is unavailable, Preview opens.
+- A right-click opens the screenshot menu.
+- Dragging to an app copies the file and keeps the card.
+- Dragging to a folder or the Desktop moves the file and removes the card.
+- Dragging to the Trash deletes the file and removes the card.
+- A canceled or failed drag returns the card.
+- `Control+Option+T` shows or hides the toolbar.
+- The Tray menu and the Top Shelf settings page control screenshot behavior.
+- The settings and log use the `com.wyz.macisland` application identifier.
 
-Internal acceptance checklist:
+## Screenshot toolbar
 
-1. Install the helper.
-2. Confirm the helper version is `0.3.0`.
-3. Enable "Prevent lid sleep on AC power".
-4. Connect the power adapter and close the lid.
-5. Confirm the display turns off and SSH stays connected.
-6. Enable "Prevent lid sleep on battery power".
-7. Use battery power and close the lid.
-8. Confirm the display turns off and SSH stays connected.
-9. Turn off the battery switch while the lid is closed.
-10. Confirm the Mac sleeps and SSH disconnects.
-11. Reach the low battery threshold.
-12. Confirm the low battery rule overrides the lid hold.
-13. Confirm the General page shows the DarkWake status.
-14. Confirm the DarkWake status shows the last time, the reason, and the 24-hour count.
-15. Fully wake the Mac.
-16. Confirm the timers restore or the power policy recalculates.
-17. Close and open the lid.
-18. Confirm the lid action starts at the lid event.
-19. Change the sleep mode between 0, 3, and 25.
-20. Clear the configuration and confirm the default values return.
-21. Quit the app and confirm the LaunchAgent does not restart it.
-22. Force-quit the app and confirm the LaunchAgent restarts it.
-23. Run a manual update check.
-24. Remove the helper and confirm `SleepDisabled` is `0`.
+The toolbar width equals the full width of the screen under the mouse pointer.
+The toolbar height is 210 points.
+The toolbar shows 3 to 12 screenshot cards.
+The mouse must stay on the menu bar for 0.25 seconds before the toolbar appears.
+The toolbar hides 0.5 seconds after the mouse leaves it.
+A new screenshot hides the toolbar after 2.5 seconds.
+The toolbar does not appear in a full-screen Space.
 
-## 0.3.0 changes
+Screenshot takeover writes these macOS settings:
 
-- DarkWake awareness reads the `pmset` wake log. DarkWake updates the status only.
-- A full wake restores the sleep timers or recalculates the power policy.
-- The battery lid hold switch keeps the Mac awake on battery power. This switch drains the battery.
-- The wake log has a 60-second cache. A new timestamp or event kind bypasses the cache.
-- The app uses a unified lid hold policy for manual, timed, and power rules.
-- An old helper shows "Helper: Update Required" and disables the lid hold switches.
+- `location`
+- `location-screenshot`
+- `show-thumbnail`
 
-## Features
+MacIsland saves the old values before the first change.
+MacIsland restores the old values when you disable takeover or quit the app normally.
+If the app crashes, the next start reads the saved values and keeps them for the next restore.
 
-- Sleep when the battery capacity reaches a threshold.
-- Sleep when the battery time remaining reaches a threshold.
-- Prevent idle sleep while the Mac uses AC power.
-- Prevent lid sleep while the Mac uses AC power.
-- Prevent lid sleep while the Mac uses battery power.
+The screenshot directory is:
+
+```text
+~/Library/Application Support/MacIsland/Screenshots
+```
+
+Screenshots stay on this Mac.
+MacIsland does not send screenshot data to the network.
+
+## Sleep and lid features
+
+- Sleep at the low-battery capacity threshold.
+- Sleep at the low-battery time threshold.
+- Prevent idle sleep on AC power.
+- Prevent lid sleep on AC power.
+- Prevent lid sleep on battery power. This option drains the battery.
 - Detect DarkWake and full wake events from the `pmset` wake log.
 - Sleep immediately when the lid closes.
 - Cancel a prevention rule after a selected delay.
-- Sleep now, or turn the display off now.
+- Run Sleep Now or Turn Display Off from the Tray menu.
 - Set hibernation mode 0, 3, or 25.
 - Detect lid changes with `IOServiceAddInterestNotification`.
 - Start at login with a LaunchAgent.
-- Restart after a crash with LaunchAgent `KeepAlive`.
+- Restart after a crash with `KeepAlive.SuccessfulExit=false`.
 - Clear the configuration from the Tray menu or the General settings page.
 - Cache the system idle timeout for 60 seconds.
 - Cache the wake log for 60 seconds.
@@ -113,13 +112,14 @@ Internal acceptance checklist:
 
 - macOS 12 or later.
 - An Apple Silicon Mac.
-- JDK 25 for packaging. The `scripts/package-macos.sh` script finds JDK 25 in the Kotlin cache.
+- JDK 25 for packaging.
+- Xcode command line tools for the native drag library.
 
 ## Build and test
 
 ```sh
-/bin/sh ./kotlin build
 /bin/sh ./kotlin test
+/bin/sh ./kotlin build
 ```
 
 ## Package
@@ -130,21 +130,51 @@ bash scripts/package-macos.sh
 
 The script writes these files:
 
-- `dist/LidSleepX.app`
-- `dist/LidSleepX-0.3.0.dmg`
+- `dist/MacIsland.app`
+- `dist/MacIsland-0.4.0.dmg`
 
-The script builds the app image with `jpackage`, sets the bundle keys, and signs the app with an ad-hoc signature.
+The script compiles `native/libMacIslandDrag.dylib` for arm64.
+The script copies the library into the app image.
+The script sets the bundle keys and applies an ad-hoc signature.
 
-## Publish an internal test release
+## Real-Mac acceptance checklist
 
-1. Run `scripts/package-macos.sh`.
-2. Run `gh auth login`.
-3. Run `bash scripts/create-release.sh`.
+Run this checklist before a public release.
+The current internal test does not complete this checklist.
 
-The release tag must be a full release.
-The update checker ignores pre-release tags.
-
-If you package a new artifact, update the SHA-256 checksum in this file.
+1. Install MacIsland 0.4.0.
+2. Confirm the app version is `0.4.0`.
+3. Install the privileged helper.
+4. Confirm the helper version is `0.4.0`.
+5. Confirm screenshot takeover changes the three `com.apple.screencapture` keys.
+6. Take a screenshot. Confirm the system thumbnail is hidden.
+7. Confirm the screenshot appears in the toolbar.
+8. Click the screenshot. Confirm the image and file URL are on the clipboard.
+9. Double-click the screenshot. Confirm Preview opens.
+10. Long-press the screenshot. Confirm Markup opens.
+11. Drag the screenshot to an app. Confirm the app receives a copy.
+12. Drag the screenshot to a folder. Confirm the source moves.
+13. Drag the screenshot to the Desktop. Confirm the source moves.
+14. Drag the screenshot to the Trash. Confirm the source uses the Trash.
+15. Cancel a drag. Confirm the card returns.
+16. Close takeover. Confirm the three system keys return to the old values.
+17. Quit MacIsland normally. Confirm the keys return to the old values.
+18. Force-quit MacIsland. Start MacIsland. Confirm the saved snapshot is reused.
+19. Test the toolbar on each display.
+20. Enter a full-screen Space. Confirm the toolbar hides.
+21. Press `Control+Option+T`. Confirm the toolbar toggles.
+22. Delete a screenshot outside MacIsland. Confirm the card disappears.
+23. Enable "Prevent lid sleep on AC power". Close the lid on AC power. Confirm SSH stays connected.
+24. Enable "Prevent lid sleep on battery power". Close the lid on battery power. Confirm SSH stays connected.
+25. Turn off the battery switch while the lid is closed. Confirm the Mac sleeps and SSH disconnects.
+26. Reach the low battery threshold. Confirm the low battery rule wins.
+27. Confirm the General page shows the DarkWake time, reason, and 24-hour count.
+28. Fully wake the Mac. Confirm the timers restore or the policy recalculates.
+29. Change the sleep mode between 0, 3, and 25.
+30. Clear the configuration. Confirm the default values return.
+31. Quit the app. Confirm the LaunchAgent does not restart it.
+32. Force-quit the app. Confirm the LaunchAgent restarts it.
+33. Remove the helper. Confirm `SleepDisabled` is `0`.
 
 ## Privileged helper
 
@@ -156,32 +186,51 @@ The helper accepts three commands:
 - `setHibernateMode`
 
 The helper checks the peer user ID before the helper runs a command.
+The app and the helper must use the same version.
+An old helper shows "Helper: Update Required" and disables the lid-hold switches.
 
-The app writes its configuration to:
+## Paths
 
-```text
-~/Library/Application Support/com.wyz.lidsleepx/config.json
-```
-
-The app writes its log to:
+The configuration is:
 
 ```text
-~/Library/Application Support/com.wyz.lidsleepx/logs/LidSleepX.log
+~/Library/Application Support/com.wyz.macisland/config.json
 ```
 
-## Launch at login
-
-The app writes the LaunchAgent to:
+The log is:
 
 ```text
-~/Library/LaunchAgents/com.wyz.lidsleepx.plist
+~/Library/Application Support/com.wyz.macisland/logs/MacIsland.log
 ```
 
-The LaunchAgent uses `RunAtLoad=true`.
-The LaunchAgent uses `KeepAlive.SuccessfulExit=false`.
-A normal exit stops the app.
-A crash restarts the app.
+The LaunchAgent is:
+
+```text
+~/Library/LaunchAgents/com.wyz.macisland.plist
+```
+
+The helper socket is:
+
+```text
+/Library/Application Support/MacIsland/helper.sock
+```
+
+The helper LaunchDaemon is:
+
+```text
+/Library/LaunchDaemons/com.wyz.macisland.helper.plist
+```
+
+## Publish an internal test release
+
+1. Run `scripts/package-macos.sh`.
+2. Run `gh auth login`.
+3. Run `bash scripts/create-release.sh`.
+
+The release tag must be a full release.
+The update checker ignores pre-release tags.
 
 ## License
 
 MIT. See `LICENSE`.
+Third-party notices are in `THIRD_PARTY_NOTICES.md`.

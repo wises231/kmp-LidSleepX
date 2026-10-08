@@ -3,14 +3,16 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-VERSION="0.3.0"
+VERSION="0.4.0"
 # jpackage rejects versions whose first component is zero.
 JPACKAGE_VERSION="1.0.0"
-APP_ID="com.wyz.lidsleepx"
-APP_NAME="LidSleepX"
+APP_ID="com.wyz.macisland"
+APP_NAME="MacIsland"
 JAR_NAME="app-jvm-executable.jar"
 JAR_DIR="$ROOT/build/tasks/_app_executableJarJvm"
-ICON="$ROOT/assets/LidSleepX.icns"
+ICON="$ROOT/assets/MacIsland.icns"
+NATIVE_LIB_NAME="libMacIslandDrag.dylib"
+NATIVE_LIB="$ROOT/native/$NATIVE_LIB_NAME"
 APP_IMAGE="$DIST/$APP_NAME.app"
 DMG_PATH="$DIST/$APP_NAME-$VERSION.dmg"
 
@@ -33,6 +35,23 @@ if [[ ! -f "$ICON" ]]; then
   printf 'Missing icon: %s\n' "$ICON" >&2
   exit 1
 fi
+
+if ! command -v clang >/dev/null 2>&1; then
+  printf 'Missing clang. Install the Xcode command line tools.\n' >&2
+  exit 1
+fi
+
+/usr/bin/clang \
+  -dynamiclib \
+  -fobjc-arc \
+  -fmodules \
+  -framework AppKit \
+  -framework Foundation \
+  -arch arm64 \
+  -mmacosx-version-min=12.0 \
+  -install_name "@rpath/$NATIVE_LIB_NAME" \
+  -o "$NATIVE_LIB" \
+  "$ROOT/native/MacIslandDrag.m"
 
 find_jdk25() {
   if [[ -n "${JAVA_HOME:-}" && -x "$JAVA_HOME/bin/jpackage" ]]; then
@@ -87,8 +106,11 @@ mkdir -p "$DIST"
   --mac-package-identifier "$APP_ID" \
   --mac-package-name "$APP_NAME" \
   --java-options "--enable-native-access=ALL-UNNAMED" \
+  --java-options "-Dmacisland.native.library=\$APPDIR/$NATIVE_LIB_NAME" \
   --java-options "-Dapple.awt.UIElement=true" \
   --java-options "-Dapple.awt.application.name=$APP_NAME"
+
+cp "$NATIVE_LIB" "$APP_IMAGE/Contents/app/$NATIVE_LIB_NAME"
 
 PLIST="$APP_IMAGE/Contents/Info.plist"
 set_plist_value() {
