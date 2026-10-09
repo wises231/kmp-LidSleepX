@@ -6,6 +6,6 @@ import kotlin.test.assertEquals
 class SmokeTest {
     @Test
     fun versionIsPresent() {
-        assertEquals("0.4.0", APP_VERSION)
+        assertEquals("0.4.1", APP_VERSION)
     }
 }

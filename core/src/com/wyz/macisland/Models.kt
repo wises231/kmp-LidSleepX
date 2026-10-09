@@ -3,7 +3,7 @@ package com.wyz.macisland.core
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-const val APP_VERSION = "0.4.0"
+const val APP_VERSION = "0.4.1"
 const val APP_ID = "com.wyz.macisland"
 const val APP_NAME = "MacIsland"
 val SUPPORTED_HIBERNATE_MODES = setOf(0, 3, 25)

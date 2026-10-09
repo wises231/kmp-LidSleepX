@@ -25,6 +25,8 @@ private interface MacIslandDragLibrary : Library {
     ): Int
 
     fun MIAnimateImageToWindow(filePath: String, windowPointer: Pointer, returning: Int): Int
+
+    fun MIOpenMarkup(filePath: String): Int
 }
 
 private interface CoreGraphicsShelfLibrary : Library {
@@ -81,6 +83,13 @@ object MacShelfNative {
     }.getOrDefault(false)
 
     fun nativeWindowPointer(component: Component): Pointer? = runCatching { nativeWindow(component) }.getOrNull()
+
+    fun openMarkup(path: Path): Boolean {
+        val library = dragLibrary ?: return false
+        return runCatching {
+            library.MIOpenMarkup(path.toAbsolutePath().normalize().toString()) == 1
+        }.getOrDefault(false)
+    }
 
     internal fun startFileDrag(
         component: Component,

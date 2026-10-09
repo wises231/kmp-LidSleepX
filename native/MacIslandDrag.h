@@ -12,6 +12,7 @@ int MIStartFileDrag(void *windowPointer,
                     int token,
                     MIDragCompletion completion);
 int MIAnimateImageToWindow(const char *filePath, void *windowPointer, int returning);
+int MIOpenMarkup(const char *filePath);
 
 #ifdef __cplusplus
 }

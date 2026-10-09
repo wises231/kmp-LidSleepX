@@ -11,12 +11,12 @@ It does not use the Tendedero name, icon, or documentation images.
 This repository is under internal test.
 The current build is not a public release.
 
-- [MacIsland-0.4.0.dmg](https://github.com/wises231/kmp-MacIsland/releases/download/v0.4.0/MacIsland-0.4.0.dmg)
-- [Release page](https://github.com/wises231/kmp-MacIsland/releases/tag/v0.4.0)
+- [MacIsland-0.4.1.dmg](https://github.com/wises231/kmp-MacIsland/releases/download/v0.4.1/MacIsland-0.4.1.dmg)
+- [Release page](https://github.com/wises231/kmp-MacIsland/releases/tag/v0.4.1)
 
 Install steps:
 
-1. Open `MacIsland-0.4.0.dmg`.
+1. Open `MacIsland-0.4.1.dmg`.
 2. Drag `MacIsland.app` to `Applications`.
 3. Open `MacIsland.app`.
 
@@ -35,8 +35,14 @@ xattr -dr com.apple.quarantine /Applications/MacIsland.app
 The download has this SHA-256 checksum:
 
 ```text
-0e9e2dc02be19f4735a5006276d43bc7921586503c7c6887b6fc9b00fe8fe50e  MacIsland-0.4.0.dmg
+a5ede3a1506293c205077ab433353c2ae6ac3cb923cec35eebeb82ebeb320752  MacIsland-0.4.1.dmg
 ```
+
+## What is new in 0.4.1
+
+- The app fixes a crash that happened when you opened Markup from a screenshot card.
+- The app opens Markup on the main thread through a native helper.
+- If Markup is unavailable, the app opens Preview.
 
 ## What is new in 0.4.0
 
@@ -131,7 +137,7 @@ bash scripts/package-macos.sh
 The script writes these files:
 
 - `dist/MacIsland.app`
-- `dist/MacIsland-0.4.0.dmg`
+- `dist/MacIsland-0.4.1.dmg`
 
 The script compiles `native/libMacIslandDrag.dylib` for arm64.
 The script copies the library into the app image.
@@ -142,10 +148,10 @@ The script sets the bundle keys and applies an ad-hoc signature.
 Run this checklist before a public release.
 The current internal test does not complete this checklist.
 
-1. Install MacIsland 0.4.0.
-2. Confirm the app version is `0.4.0`.
+1. Install MacIsland 0.4.1.
+2. Confirm the app version is `0.4.1`.
 3. Install the privileged helper.
-4. Confirm the helper version is `0.4.0`.
+4. Confirm the helper version is `0.4.1`.
 5. Confirm screenshot takeover changes the three `com.apple.screencapture` keys.
 6. Take a screenshot. Confirm the system thumbnail is hidden.
 7. Confirm the screenshot appears in the toolbar.

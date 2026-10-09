@@ -200,3 +200,36 @@ int MIAnimateImageToWindow(const char *filePath, void *windowPointer, int return
     });
     return 1;
 }
+
+int MIOpenMarkup(const char *filePath) {
+    if (filePath == NULL) {
+        return 0;
+    }
+
+    __block BOOL opened = NO;
+    void (^openBlock)(void) = ^{
+        @try {
+            NSString *path = [NSString stringWithUTF8String:filePath];
+            if (path.length == 0) {
+                return;
+            }
+            NSURL *url = [NSURL fileURLWithPath:path];
+            NSSharingService *service =
+                [NSSharingService sharingServiceNamed:@"com.apple.MarkupUI.Markup"];
+            if (service == nil || ![service canPerformWithItems:@[url]]) {
+                return;
+            }
+            [service performWithItems:@[url]];
+            opened = YES;
+        } @catch (__unused NSException *exception) {
+            opened = NO;
+        }
+    };
+
+    if ([NSThread isMainThread]) {
+        openBlock();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), openBlock);
+    }
+    return opened ? 1 : 0;
+}

@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-VERSION="0.4.0"
+VERSION="0.4.1"
 TAG="v$VERSION"
 DMG="$DIST/MacIsland-$VERSION.dmg"
 NOTES="$ROOT/RELEASE_NOTES.md"

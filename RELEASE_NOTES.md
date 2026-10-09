@@ -1,7 +1,12 @@
-# MacIsland 0.4.0 (internal test)
+# MacIsland 0.4.1 (internal test)
 
-This is the first MacIsland internal test build.
+This is an internal test build.
 It is not a public release.
+
+This build fixes a crash.
+The app crashed when you opened Markup from a screenshot card.
+The app now opens Markup on the main thread through a native helper.
+If Markup is unavailable, the app opens Preview.
 
 ## Requirements
 
@@ -37,9 +42,15 @@ It is not a public release.
 - English and Simplified Chinese text.
 - A single-instance lock.
 
+## Fixes in this build
+
+- The app does not crash when you open Markup from a screenshot card.
+- The app calls the AppKit Markup service on the main thread.
+- The app logs the Markup failure and opens Preview when Markup does not start.
+
 ## Clean install
 
-MacIsland 0.4.0 uses the new `com.wyz.macisland` identifier.
+MacIsland 0.4.1 uses the `com.wyz.macisland` identifier.
 MacIsland does not migrate LidSleepX settings.
 MacIsland does not modify the old LidSleepX app, helper, or configuration.
 Uninstall LidSleepX 0.3.0 before you use this build.
@@ -52,12 +63,12 @@ The helper accepts only these commands:
 - `setDisableSleep`
 - `setHibernateMode`
 
-The app and the helper must use version `0.4.0`.
+The app and the helper must use version `0.4.1`.
 An old helper shows "Helper: Update Required".
 
 ## Install
 
-1. Open `MacIsland-0.4.0.dmg`.
+1. Open `MacIsland-0.4.1.dmg`.
 2. Drag `MacIsland.app` to `Applications`.
 3. Open `MacIsland.app`.
 
@@ -72,8 +83,8 @@ xattr -dr com.apple.quarantine /Applications/MacIsland.app
 ## Checksum
 
 ```text
-SHA-256: 0e9e2dc02be19f4735a5006276d43bc7921586503c7c6887b6fc9b00fe8fe50e
-MacIsland-0.4.0.dmg
+SHA-256: a5ede3a1506293c205077ab433353c2ae6ac3cb923cec35eebeb82ebeb320752
+MacIsland-0.4.1.dmg
 ```
 
 ## Internal test notes
