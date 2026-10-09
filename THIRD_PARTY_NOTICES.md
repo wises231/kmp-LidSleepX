@@ -2,7 +2,7 @@
 
 ## BatteryHog
 
-The wake-log parsing approach in `core/src/com/wyz/macisland/PmsetWakeLogParser.kt` follows BatteryHog.
+The wake-log parsing approach in `core/src/com/wyz/covio/PmsetWakeLogParser.kt` follows BatteryHog.
 
 - Source: https://github.com/luke-fairbanks/BatteryHog
 - Copyright: Copyright (c) 2026 Luke Fairbanks
@@ -40,7 +40,7 @@ The screenshot toolbar design follows Tendedero.
 - Copyright: Copyright (c) 2026 Alejandro Buján
 - License: MIT
 
-MacIsland does not use the Tendedero name, icon, or documentation images.
+Covio does not use the Tendedero name, icon, or documentation images.
 
 ```text
 MIT License

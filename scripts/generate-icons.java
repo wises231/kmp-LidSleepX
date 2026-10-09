@@ -10,18 +10,18 @@ public final class generate_icons {
 
     public static void main(String[] args) throws Exception {
         Path root = args.length > 0 ? Path.of(args[0]) : Path.of("assets");
-        Path iconset = root.resolve("MacIsland.iconset");
+        Path iconset = root.resolve("Covio.iconset");
         Path tray = root.resolve("tray");
         Files.createDirectories(iconset);
         Files.createDirectories(tray);
 
-        ImageIO.write(renderAppIcon(1024), "png", root.resolve("MacIsland.png").toFile());
+        ImageIO.write(renderAppIcon(1024), "png", root.resolve("Covio.png").toFile());
         for (int size : ICON_SIZES) {
             ImageIO.write(renderAppIcon(size), "png", iconset.resolve("icon_" + size + "x" + size + ".png").toFile());
             ImageIO.write(renderAppIcon(size * 2), "png", iconset.resolve("icon_" + size + "x" + size + "@2x.png").toFile());
         }
-        ImageIO.write(renderTrayIcon(18), "png", tray.resolve("MacIslandTemplate.png").toFile());
-        ImageIO.write(renderTrayIcon(36), "png", tray.resolve("MacIslandTemplate@2x.png").toFile());
+        ImageIO.write(renderTrayIcon(18), "png", tray.resolve("CovioTemplate.png").toFile());
+        ImageIO.write(renderTrayIcon(36), "png", tray.resolve("CovioTemplate@2x.png").toFile());
         System.out.println("Created icon assets in " + root.toAbsolutePath());
     }
 

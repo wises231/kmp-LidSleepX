@@ -3,15 +3,15 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-VERSION="0.4.1"
+VERSION="0.4.2"
 # jpackage rejects versions whose first component is zero.
 JPACKAGE_VERSION="1.0.0"
-APP_ID="com.wyz.macisland"
-APP_NAME="MacIsland"
+APP_ID="com.wyz.covio"
+APP_NAME="Covio"
 JAR_NAME="app-jvm-executable.jar"
 JAR_DIR="$ROOT/build/tasks/_app_executableJarJvm"
-ICON="$ROOT/assets/MacIsland.icns"
-NATIVE_LIB_NAME="libMacIslandDrag.dylib"
+ICON="$ROOT/assets/Covio.icns"
+NATIVE_LIB_NAME="libCovioDrag.dylib"
 NATIVE_LIB="$ROOT/native/$NATIVE_LIB_NAME"
 APP_IMAGE="$DIST/$APP_NAME.app"
 DMG_PATH="$DIST/$APP_NAME-$VERSION.dmg"
@@ -51,7 +51,7 @@ fi
   -mmacosx-version-min=12.0 \
   -install_name "@rpath/$NATIVE_LIB_NAME" \
   -o "$NATIVE_LIB" \
-  "$ROOT/native/MacIslandDrag.m"
+  "$ROOT/native/CovioDrag.m"
 
 find_jdk25() {
   if [[ -n "${JAVA_HOME:-}" && -x "$JAVA_HOME/bin/jpackage" ]]; then
@@ -106,7 +106,7 @@ mkdir -p "$DIST"
   --mac-package-identifier "$APP_ID" \
   --mac-package-name "$APP_NAME" \
   --java-options "--enable-native-access=ALL-UNNAMED" \
-  --java-options "-Dmacisland.native.library=\$APPDIR/$NATIVE_LIB_NAME" \
+  --java-options "-Dcovio.native.library=\$APPDIR/$NATIVE_LIB_NAME" \
   --java-options "-Dapple.awt.UIElement=true" \
   --java-options "-Dapple.awt.application.name=$APP_NAME"
 

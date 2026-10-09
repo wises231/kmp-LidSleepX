@@ -3,11 +3,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-VERSION="0.4.1"
+VERSION="0.4.2"
 TAG="v$VERSION"
-DMG="$DIST/MacIsland-$VERSION.dmg"
+DMG="$DIST/Covio-$VERSION.dmg"
 NOTES="$ROOT/RELEASE_NOTES.md"
-REPO="wises231/kmp-MacIsland"
+REPO="wises231/kmp-Covio"
 
 if ! command -v gh >/dev/null 2>&1; then
   printf 'Install the GitHub CLI first: brew install gh\n' >&2
@@ -28,7 +28,7 @@ fi
 # Therefore this release must stay a full release, not a pre-release.
 gh release create "$TAG" "$DMG" \
   --repo "$REPO" \
-  --title "MacIsland $VERSION (internal test)" \
+  --title "Covio $VERSION (internal test)" \
   --notes-file "$NOTES"
 
 printf 'Created release %s in %s\n' "$TAG" "$REPO"

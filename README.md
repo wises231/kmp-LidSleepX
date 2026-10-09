@@ -1,9 +1,9 @@
-# MacIsland
+# Covio
 
-MacIsland is a macOS menu-bar app.
+Covio is a macOS menu-bar app.
 It controls sleep behavior and provides a screenshot toolbar at the top of the screen.
 
-MacIsland is an independent implementation.
+Covio is an independent implementation.
 It does not use the Tendedero name, icon, or documentation images.
 
 ## Download (internal test)
@@ -11,32 +11,39 @@ It does not use the Tendedero name, icon, or documentation images.
 This repository is under internal test.
 The current build is not a public release.
 
-- [MacIsland-0.4.1.dmg](https://github.com/wises231/kmp-MacIsland/releases/download/v0.4.1/MacIsland-0.4.1.dmg)
-- [Release page](https://github.com/wises231/kmp-MacIsland/releases/tag/v0.4.1)
+- [Covio-0.4.2.dmg](https://github.com/wises231/kmp-Covio/releases/download/v0.4.2/Covio-0.4.2.dmg)
+- [Release page](https://github.com/wises231/kmp-Covio/releases/tag/v0.4.2)
 
 Install steps:
 
-1. Open `MacIsland-0.4.1.dmg`.
-2. Drag `MacIsland.app` to `Applications`.
-3. Open `MacIsland.app`.
+1. Open `Covio-0.4.2.dmg`.
+2. Drag `Covio.app` to `Applications`.
+3. Open `Covio.app`.
 
-MacIsland uses a clean install.
-MacIsland does not copy LidSleepX settings or helper files.
-The old LidSleepX app, helper, and settings remain unchanged.
+Covio uses a clean install.
+Covio does not copy settings from older internal-test builds.
+The old apps, helpers, and settings remain unchanged.
 
 **Warning:** This build uses an ad-hoc signature.
 macOS Gatekeeper rejects this build.
 If macOS blocks the app, allow the app in the "Privacy & Security" settings, or clear the quarantine flag:
 
 ```sh
-xattr -dr com.apple.quarantine /Applications/MacIsland.app
+xattr -dr com.apple.quarantine /Applications/Covio.app
 ```
 
 The download has this SHA-256 checksum:
 
 ```text
-a5ede3a1506293c205077ab433353c2ae6ac3cb923cec35eebeb82ebeb320752  MacIsland-0.4.1.dmg
+1237b65bdb8c0c15f1300a0b6ca095f8280db3b1894f1018fb2803b386333344  Covio-0.4.2.dmg
 ```
+
+## What is new in 0.4.2
+
+- The project name is Covio.
+- The Kotlin package is `com.wyz.covio`.
+- The application identifier is `com.wyz.covio`.
+- The app uses `Covio` for settings, logs, the helper, and the LaunchAgent.
 
 ## What is new in 0.4.1
 
@@ -46,7 +53,7 @@ a5ede3a1506293c205077ab433353c2ae6ac3cb923cec35eebeb82ebeb320752  MacIsland-0.4.
 
 ## What is new in 0.4.0
 
-- The app is now MacIsland.
+- The app adds the screenshot toolbar.
 - The app keeps the sleep, lid, DarkWake, helper, and LaunchAgent functions.
 - The app adds a full-width screenshot toolbar at the top of the mouse screen.
 - Screenshot takeover is on by default.
@@ -61,7 +68,7 @@ a5ede3a1506293c205077ab433353c2ae6ac3cb923cec35eebeb82ebeb320752  MacIsland-0.4.
 - A canceled or failed drag returns the card.
 - `Control+Option+T` shows or hides the toolbar.
 - The Tray menu and the Top Shelf settings page control screenshot behavior.
-- The settings and log use the `com.wyz.macisland` application identifier.
+- The settings and log use the `com.wyz.covio` application identifier.
 
 ## Screenshot toolbar
 
@@ -79,18 +86,18 @@ Screenshot takeover writes these macOS settings:
 - `location-screenshot`
 - `show-thumbnail`
 
-MacIsland saves the old values before the first change.
-MacIsland restores the old values when you disable takeover or quit the app normally.
+Covio saves the old values before the first change.
+Covio restores the old values when you disable takeover or quit the app normally.
 If the app crashes, the next start reads the saved values and keeps them for the next restore.
 
 The screenshot directory is:
 
 ```text
-~/Library/Application Support/MacIsland/Screenshots
+~/Library/Application Support/Covio/Screenshots
 ```
 
 Screenshots stay on this Mac.
-MacIsland does not send screenshot data to the network.
+Covio does not send screenshot data to the network.
 
 ## Sleep and lid features
 
@@ -136,10 +143,10 @@ bash scripts/package-macos.sh
 
 The script writes these files:
 
-- `dist/MacIsland.app`
-- `dist/MacIsland-0.4.1.dmg`
+- `dist/Covio.app`
+- `dist/Covio-0.4.2.dmg`
 
-The script compiles `native/libMacIslandDrag.dylib` for arm64.
+The script compiles `native/libCovioDrag.dylib` for arm64.
 The script copies the library into the app image.
 The script sets the bundle keys and applies an ad-hoc signature.
 
@@ -148,10 +155,10 @@ The script sets the bundle keys and applies an ad-hoc signature.
 Run this checklist before a public release.
 The current internal test does not complete this checklist.
 
-1. Install MacIsland 0.4.1.
-2. Confirm the app version is `0.4.1`.
+1. Install Covio 0.4.2.
+2. Confirm the app version is `0.4.2`.
 3. Install the privileged helper.
-4. Confirm the helper version is `0.4.1`.
+4. Confirm the helper version is `0.4.2`.
 5. Confirm screenshot takeover changes the three `com.apple.screencapture` keys.
 6. Take a screenshot. Confirm the system thumbnail is hidden.
 7. Confirm the screenshot appears in the toolbar.
@@ -164,12 +171,12 @@ The current internal test does not complete this checklist.
 14. Drag the screenshot to the Trash. Confirm the source uses the Trash.
 15. Cancel a drag. Confirm the card returns.
 16. Close takeover. Confirm the three system keys return to the old values.
-17. Quit MacIsland normally. Confirm the keys return to the old values.
-18. Force-quit MacIsland. Start MacIsland. Confirm the saved snapshot is reused.
+17. Quit Covio normally. Confirm the keys return to the old values.
+18. Force-quit Covio. Start Covio. Confirm the saved snapshot is reused.
 19. Test the toolbar on each display.
 20. Enter a full-screen Space. Confirm the toolbar hides.
 21. Press `Control+Option+T`. Confirm the toolbar toggles.
-22. Delete a screenshot outside MacIsland. Confirm the card disappears.
+22. Delete a screenshot outside Covio. Confirm the card disappears.
 23. Enable "Prevent lid sleep on AC power". Close the lid on AC power. Confirm SSH stays connected.
 24. Enable "Prevent lid sleep on battery power". Close the lid on battery power. Confirm SSH stays connected.
 25. Turn off the battery switch while the lid is closed. Confirm the Mac sleeps and SSH disconnects.
@@ -200,31 +207,31 @@ An old helper shows "Helper: Update Required" and disables the lid-hold switches
 The configuration is:
 
 ```text
-~/Library/Application Support/com.wyz.macisland/config.json
+~/Library/Application Support/com.wyz.covio/config.json
 ```
 
 The log is:
 
 ```text
-~/Library/Application Support/com.wyz.macisland/logs/MacIsland.log
+~/Library/Application Support/com.wyz.covio/logs/Covio.log
 ```
 
 The LaunchAgent is:
 
 ```text
-~/Library/LaunchAgents/com.wyz.macisland.plist
+~/Library/LaunchAgents/com.wyz.covio.plist
 ```
 
 The helper socket is:
 
 ```text
-/Library/Application Support/MacIsland/helper.sock
+/Library/Application Support/Covio/helper.sock
 ```
 
 The helper LaunchDaemon is:
 
 ```text
-/Library/LaunchDaemons/com.wyz.macisland.helper.plist
+/Library/LaunchDaemons/com.wyz.covio.helper.plist
 ```
 
 ## Publish an internal test release

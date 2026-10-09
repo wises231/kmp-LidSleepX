@@ -1,12 +1,11 @@
-# MacIsland 0.4.1 (internal test)
+# Covio 0.4.2 (internal test)
 
 This is an internal test build.
 It is not a public release.
 
-This build fixes a crash.
-The app crashed when you opened Markup from a screenshot card.
-The app now opens Markup on the main thread through a native helper.
-If Markup is unavailable, the app opens Preview.
+This build renames the project to Covio.
+The Kotlin package is `com.wyz.covio`.
+The application identifier is `com.wyz.covio`.
 
 ## Requirements
 
@@ -16,6 +15,9 @@ If Markup is unavailable, the app opens Preview.
 
 ## What is in this build
 
+- The Covio project name.
+- The `com.wyz.covio` Kotlin package and application identifier.
+- Covio paths for settings, logs, screenshots, the helper, and the LaunchAgent.
 - A menu-bar app with no Dock icon.
 - A full-width screenshot toolbar at the top of the screen.
 - Screenshot takeover with the system thumbnail hidden.
@@ -42,18 +44,12 @@ If Markup is unavailable, the app opens Preview.
 - English and Simplified Chinese text.
 - A single-instance lock.
 
-## Fixes in this build
-
-- The app does not crash when you open Markup from a screenshot card.
-- The app calls the AppKit Markup service on the main thread.
-- The app logs the Markup failure and opens Preview when Markup does not start.
-
 ## Clean install
 
-MacIsland 0.4.1 uses the `com.wyz.macisland` identifier.
-MacIsland does not migrate LidSleepX settings.
-MacIsland does not modify the old LidSleepX app, helper, or configuration.
-Uninstall LidSleepX 0.3.0 before you use this build.
+Covio uses the `com.wyz.covio` identifier.
+Covio does not migrate older internal-test settings.
+Covio does not modify older apps, helpers, or configurations.
+Uninstall the older internal-test app before you use this build.
 
 ## Privileged helper
 
@@ -63,28 +59,28 @@ The helper accepts only these commands:
 - `setDisableSleep`
 - `setHibernateMode`
 
-The app and the helper must use version `0.4.1`.
+The app and the helper must use version `0.4.2`.
 An old helper shows "Helper: Update Required".
 
 ## Install
 
-1. Open `MacIsland-0.4.1.dmg`.
-2. Drag `MacIsland.app` to `Applications`.
-3. Open `MacIsland.app`.
+1. Open `Covio-0.4.2.dmg`.
+2. Drag `Covio.app` to `Applications`.
+3. Open `Covio.app`.
 
 **Warning:** This build uses an ad-hoc signature.
 macOS Gatekeeper rejects this build.
 If macOS blocks the app, open the app from the `Privacy & Security` settings, or clear the quarantine flag:
 
 ```sh
-xattr -dr com.apple.quarantine /Applications/MacIsland.app
+xattr -dr com.apple.quarantine /Applications/Covio.app
 ```
 
 ## Checksum
 
 ```text
-SHA-256: a5ede3a1506293c205077ab433353c2ae6ac3cb923cec35eebeb82ebeb320752
-MacIsland-0.4.1.dmg
+SHA-256: 1237b65bdb8c0c15f1300a0b6ca095f8280db3b1894f1018fb2803b386333344
+Covio-0.4.2.dmg
 ```
 
 ## Internal test notes
